@@ -1,0 +1,3242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conseil de Guerre — La Danse des Dragons</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #f0ece0;
+            --panel: #faf8f2;
+            --panel2: #f4f1e8;
+            --text: #2c2412;
+            --gold: #8b6c28;
+            --gold-light: #c9a84c;
+            --border: #d4cdb8;
+            --border-light: #e8e4d8;
+            --white: #ffffff;
+            --vert: #2e6b1f;
+            --rouge: #8b0000;
+            --noire: #1a1a3e;
+            --neutre: #5a5a5a;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ── HEADER ── */
+        .site-header {
+            background: linear-gradient(135deg, #2c1a06 0%, #4a2e0a 50%, #2c1a06 100%);
+            padding: 24px 40px 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--gold);
+        }
+        .site-header h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-light);
+            font-size: 2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin: 0 0 4px 0;
+        }
+        .site-header p {
+            color: #a08860;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin: 0;
+        }
+
+        /* ── ONGLETS ── */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            padding: 16px 20px 0;
+            background: var(--panel2);
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 22px;
+            background: transparent;
+            color: #888;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        .tab-btn:hover { color: var(--gold); background: var(--panel); }
+        .tab-btn.active {
+            background: var(--panel);
+            color: var(--gold);
+            border-color: var(--border);
+            border-bottom-color: var(--panel);
+            font-weight: 700;
+        }
+
+        /* ── SECTIONS ── */
+        .view-section { display: none; padding: 24px 30px; max-width: 1300px; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+        /* ── CONTRÔLES MAISONS ── */
+        .controls {
+            background: var(--panel);
+            padding: 18px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-light);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .filter-label {
+            font-family: 'Cinzel', serif;
+            font-size: 0.78rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-right: 8px;
+        }
+        select {
+            background: var(--white);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+            padding: 7px 12px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* ── GRILLE MAISONS ── */
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 6px;
+            justify-content: flex-start;
+            border: 1px solid var(--border-light);
+        }
+        .grid::-webkit-scrollbar { width: 6px; }
+        .grid::-webkit-scrollbar-track { background: var(--border-light); }
+        .grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        input[type="checkbox"] { display: none; }
+        label {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            background: var(--white);
+            color: var(--text);
+            user-select: none;
+            transition: all 0.15s;
+            border-left-width: 4px;
+        }
+        label:hover { border-color: var(--gold); background: #fffdf5; }
+        input:checked + label {
+            background: var(--gold);
+            color: var(--white);
+            border-color: var(--gold);
+            font-weight: 700;
+        }
+
+        /* ── RADAR PRINCIPAL ── */
+        .chart-box {
+            position: relative;
+            height: 58vh;
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 28px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+        }
+
+        /* ── CARTES MAISONS ── */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            width: 100%;
+        }
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--gold);
+            padding: 18px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+        }
+        .card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .card h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin: 0 0 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+        }
+        .card p { font-size: 0.88rem; color: #666; font-style: italic; flex-grow: 1; line-height: 1.5; margin: 0 0 12px 0; }
+        .stats-mini { background: var(--panel2); padding: 10px; border-radius: 5px; margin-top: auto; }
+        .s-row { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--border-light); }
+        .s-row:last-child { border-bottom: none; margin-bottom: 0; }
+        .empty-msg { grid-column: 1/-1; text-align: center; padding: 40px; color: #999; font-style: italic; }
+
+        /* ── BADGES FACTION ── */
+        .faction-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: 'Lato', sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .fb-Vert   { background: #d4edda; color: var(--vert); border: 1px solid #a8d5b5; }
+        .fb-Rouge  { background: #f8d7da; color: var(--rouge); border: 1px solid #f5c6cb; }
+        .fb-Noire  { background: #d6d8f0; color: var(--noire); border: 1px solid #b8bcdf; }
+        .fb-Neutres{ background: #e8e8e8; color: var(--neutre); border: 1px solid #ccc; }
+
+        /* ── SECTION RÉGIONS / FACTIONS ── */
+        .section-title {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .region-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--gold);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+        }
+        .region-card h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 1.05rem;
+            margin: 0 0 6px 0;
+        }
+
+        .region-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            align-items: start;
+            margin-top: 14px;
+        }
+        @media(max-width:800px) { .region-layout { grid-template-columns: 1fr; } }
+
+        .region-chart-wrap { position: relative; height: 280px; }
+
+        .region-info { font-size: 0.83rem; }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .info-label { color: #888; }
+        .info-val { font-weight: 700; color: var(--text); }
+
+        /* ── BARRE COHÉSION ── */
+        .cohesion-wrap { margin: 12px 0; }
+        .cohesion-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .cohesion-label { font-family: 'Cinzel', serif; font-size: 0.78rem; color: var(--gold); }
+        .cohesion-pct { font-weight: 700; font-size: 0.9rem; }
+        .cohesion-bar-bg { height: 10px; background: var(--border-light); border-radius: 5px; overflow: hidden; }
+        .cohesion-bar { height: 100%; border-radius: 5px; transition: width 0.6s; }
+
+        /* ── LISTE MAISONS ── */
+        .house-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .house-tag {
+            font-size: 0.72rem;
+            padding: 3px 9px;
+            border-radius: 3px;
+            background: var(--panel2);
+            border-left: 3px solid var(--gold);
+            color: var(--text);
+            font-family: 'Cinzel', serif;
+        }
+
+        /* ── STAT SPÉCIALITÉ ── */
+        .specialty-badge {
+            display: inline-block;
+            background: #fff8e8;
+            border: 1px solid var(--gold-light);
+            color: var(--gold);
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 3px;
+            font-family: 'Cinzel', serif;
+        }
+
+        @media(max-width:768px) { .view-section { padding: 16px; } }
+    
+        /* ── MODE ÉDITION ── */
+        #view-edit { background: var(--panel2); }
+        .edit-header {
+            background: #2c1a06;
+            color: var(--gold-light);
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .edit-header h2 { font-family:'Cinzel',serif; font-size:1rem; margin:0; color:var(--gold-light); }
+        .edit-header p  { font-size:0.8rem; color:#a08860; margin:0; }
+        .btn-export {
+            background: var(--gold);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cinzel',serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: background 0.2s;
+        }
+        .btn-export:hover { background: #6a4e10; }
+        .edit-section-title {
+            font-family: 'Cinzel',serif;
+            color: var(--gold);
+            font-size: 1rem;
+            margin: 24px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border);
+        }
+        /* Cohesion edit */
+        .cohesion-edit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px,1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .cohesion-edit-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--gold);
+            border-radius: 8px;
+            padding: 14px 16px;
+        }
+        .cohesion-edit-card label {
+            display: block;
+            font-family: 'Cinzel',serif;
+            font-size: 0.8rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+            border: none;
+            padding: 0;
+            background: none;
+            cursor: default;
+        }
+        .cohesion-edit-card label:hover { background: none; border-color: transparent; }
+        .cohesion-row { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+        .cohesion-row span { font-size:0.75rem; color:#888; min-width:55px; }
+        .cohesion-row input[type=range] {
+            display:inline-block;
+            flex:1;
+            height:6px;
+            accent-color: var(--gold);
+        }
+        .cohesion-row .pct-val {
+            font-weight:700;
+            color:var(--gold);
+            min-width:36px;
+            text-align:right;
+            font-size:0.85rem;
+        }
+        .cohesion-row select {
+            flex:1;
+            font-size:0.78rem;
+            padding:4px 8px;
+        }
+        /* House edit */
+        .house-edit-filter {
+            display:flex;
+            gap:10px;
+            align-items:center;
+            flex-wrap:wrap;
+            margin-bottom:14px;
+        }
+        .house-edit-filter select { font-size:0.85rem; }
+        .house-edit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px,1fr));
+            gap: 14px;
+        }
+        .house-edit-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            border-left: 4px solid #ccc;
+        }
+        .house-edit-card h4 {
+            font-family:'Cinzel',serif;
+            color:var(--gold);
+            font-size:0.9rem;
+            margin:0 0 10px 0;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        .house-edit-card h4 select {
+            font-size:0.72rem;
+            padding:3px 6px;
+            font-family:'Lato',sans-serif;
+        }
+        .stat-edit-row {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            margin-bottom:5px;
+        }
+        .stat-edit-row label {
+            font-size:0.72rem;
+            color:#888;
+            min-width:110px;
+            border:none;
+            padding:0;
+            background:none;
+            cursor:default;
+            user-select:none;
+        }
+        .stat-edit-row label:hover { background:none; border-color:transparent; }
+        .stat-edit-row input[type=range] {
+            display:inline-block;
+            flex:1;
+            accent-color:var(--gold);
+        }
+        .stat-edit-row .stat-val {
+            font-weight:700;
+            min-width:18px;
+            text-align:right;
+            font-size:0.82rem;
+            color:var(--text);
+        }
+        .edit-saved-badge {
+            display:none;
+            background:#d4edda;
+            color:#155724;
+            border:1px solid #c3e6cb;
+            padding:4px 12px;
+            border-radius:4px;
+            font-size:0.78rem;
+        }
+
+        /* ── ONGLET ÉCHELLES ── */
+        .scales-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(420px,1fr)); gap:16px; margin-bottom:24px; }
+        .scale-card { background:var(--white); border:1px solid var(--border); border-top:4px solid var(--gold); border-radius:8px; padding:16px; }
+        .scale-card h3 { font-family:'Cinzel',serif; color:var(--gold); font-size:0.9rem; margin:0 0 12px 0; }
+        .scale-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; padding:4px 0; border-bottom:1px solid var(--border-light); }
+        .scale-row:last-child { border-bottom:none; }
+        .scale-lvl { font-family:'Cinzel',serif; font-weight:700; color:var(--gold); min-width:24px; font-size:0.85rem; }
+        .scale-input { flex:1; padding:4px 8px; border:1px solid var(--border); border-radius:3px; font-size:0.78rem; font-family:'Lato',sans-serif; }
+        .scale-input:focus { outline:none; border-color:var(--gold); }
+        .scale-input-sm { width:70px; padding:4px 6px; border:1px solid var(--border); border-radius:3px; font-size:0.78rem; text-align:center; }
+        .scale-sep { color:#ccc; font-size:0.8rem; }
+        .scale-unit { font-size:0.72rem; color:#aaa; min-width:30px; }
+        /* Ajout maison */
+        .add-house-btn {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:8px 16px; background:var(--gold); color:#fff;
+            border:none; border-radius:5px; cursor:pointer;
+            font-family:'Cinzel',serif; font-size:0.8rem; font-weight:700;
+            margin-bottom:14px; transition:background 0.2s;
+        }
+        .add-house-btn:hover { background:#6a4e10; }
+        .del-house-btn {
+            background:#8b0000; color:#fff; border:none; border-radius:3px;
+            padding:2px 8px; cursor:pointer; font-size:0.72rem; margin-top:6px;
+        }
+        .del-house-btn:hover { background:#600000; }
+        .house-name-input {
+            font-family:'Cinzel',serif; font-size:0.85rem; color:var(--gold);
+            border:none; border-bottom:1px dashed var(--gold); background:transparent;
+            width:100%; margin-bottom:8px; padding:2px 0;
+        }
+        .house-name-input:focus { outline:none; border-bottom-color:#333; }
+        /* Modal ajout maison */
+        .modal-overlay {
+            display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+            background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;
+        }
+        .modal-overlay.open { display:flex; }
+        .modal-box {
+            background:var(--white); border-radius:10px; padding:24px;
+            max-width:520px; width:90%; max-height:85vh; overflow-y:auto;
+            border-top:4px solid var(--gold);
+        }
+        .modal-box h3 { font-family:'Cinzel',serif; color:var(--gold); margin:0 0 16px; }
+        .modal-field { margin-bottom:12px; }
+        .modal-field label { display:block; font-size:0.78rem; color:#888; margin-bottom:4px; }
+        .modal-field input, .modal-field select, .modal-field textarea {
+            width:100%; padding:7px 10px; border:1px solid var(--border);
+            border-radius:4px; font-family:'Lato',sans-serif; font-size:0.85rem;
+        }
+        .modal-field textarea { resize:vertical; min-height:60px; }
+        .modal-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .modal-stat-row { display:flex; align-items:center; gap:6px; }
+        .modal-stat-row label { font-size:0.72rem; color:#888; min-width:100px; margin:0; }
+        .modal-stat-row input[type=range] { flex:1; accent-color:var(--gold); }
+        .modal-stat-row .sv { font-weight:700; min-width:18px; font-size:0.82rem; }
+        .modal-btns { display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
+        .modal-btn-cancel { padding:8px 16px; border:1px solid var(--border); border-radius:5px; cursor:pointer; background:transparent; font-family:'Cinzel',serif; }
+        .modal-btn-ok { padding:8px 16px; background:var(--gold); color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Cinzel',serif; font-weight:700; }
+
+    
+        /* ── CARTES RÉGIONS CLIQUABLES ── */
+        .region-mini-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--gold);
+            border-radius: 8px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+        }
+        .region-mini-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); transform: translateY(-1px); }
+        .region-mini-card.selected {
+            border-top-color: var(--gold);
+            box-shadow: 0 0 0 2px var(--gold);
+            background: #fffdf5;
+        }
+        .region-mini-card h4 {
+            font-family: 'Cinzel', serif;
+            font-size: 0.82rem;
+            color: var(--gold);
+            margin: 0 0 6px 0;
+        }
+        .region-mini-bar-bg { height: 5px; background: var(--border-light); border-radius: 3px; margin: 3px 0; overflow: hidden; }
+        .region-mini-bar { height: 100%; border-radius: 3px; }
+        .region-mini-stat { display:flex; justify-content:space-between; font-size:0.68rem; color:#888; margin-top:2px; }
+
+        /* ── FICHES DÉTAIL COMPACTES ── */
+        .region-detail-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .region-detail-card h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.92rem;
+            margin: 0 0 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .coh-bar-sm { height: 7px; background: var(--border-light); border-radius: 4px; margin: 5px 0 8px; overflow: hidden; }
+        .coh-bar-fill { height: 100%; border-radius: 4px; }
+        .detail-section-lbl {
+            font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--gold-light); font-weight: 700; margin: 8px 0 4px;
+        }
+        .detail-row {
+            display: flex; justify-content: space-between;
+            font-size: 0.75rem; padding: 2px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-lbl { color: #888; }
+        .detail-val { font-weight: 700; color: var(--text); }
+        .region-house-list {
+            display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+        }
+        .region-house-chip {
+            font-size: 0.64rem; padding: 2px 7px;
+            border-radius: 3px; background: var(--panel2);
+            border-left: 2px solid var(--gold);
+            color: var(--text);
+        }
+
+    
+        /* ── TOGGLE VIEWS ── */
+        .view-toggle-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--panel2);
+            color: #888;
+            cursor: pointer;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+        }
+        .view-toggle-btn:hover { border-color: var(--gold); color: var(--gold); }
+        .view-toggle-btn.active { background: var(--gold); color: #fff; border-color: var(--gold); font-weight: 700; }
+
+        /* ── TABLEAU COMPARATIF ── */
+        .compare-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .compare-table th {
+            background: var(--panel2);
+            padding: 8px 12px;
+            text-align: left;
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: 0.75rem;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+        .compare-table th.stat-col { text-align: right; min-width: 130px; }
+        .compare-table td {
+            padding: 7px 12px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text);
+        }
+        .compare-table td.stat-col { text-align: right; font-weight: 700; }
+        .compare-table tr:hover td { background: #fffdf5; }
+        .compare-table tr:last-child td { border-bottom: none; }
+        .color-chip { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+
+        /* ── MINI CARTES FACTIONS ── */
+        .faction-mini-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-top: 4px solid #888;
+            border-radius: 8px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.18s;
+            user-select: none;
+        }
+        .faction-mini-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); transform: translateY(-1px); }
+        .faction-mini-card.selected { box-shadow: 0 0 0 2px currentColor; background: #fffdf5; }
+        .faction-mini-card h4 { font-family: 'Cinzel', serif; font-size: 0.88rem; margin: 0 0 6px 0; }
+
+    
+        /* ── TABLEAU DE COMPARAISON FICHES ── */
+        .compare-wrap {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+        }
+        .compare-table-full {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .compare-table-full .col-label { width: 32%; }
+        .compare-table-full .col-val   { width: auto; }
+        .compare-table-full th {
+            padding: 12px 14px;
+            text-align: left;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            border-bottom: 2px solid var(--border);
+            background: var(--panel2);
+            vertical-align: middle;
+        }
+        .compare-table-full th.val-col {
+            text-align: center;
+            font-size: 0.78rem;
+            border-left: 1px solid var(--border-light);
+        }
+        .compare-table-full td {
+            padding: 7px 14px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.82rem;
+            vertical-align: middle;
+        }
+        .compare-table-full td.val-col {
+            text-align: center;
+            font-weight: 700;
+            border-left: 1px solid var(--border-light);
+            font-size: 0.8rem;
+        }
+        .compare-table-full tr:hover td { background: #fffdf5; }
+        .compare-table-full tr.section-row td {
+            background: #f5f0e4;
+            font-family: 'Cinzel', serif;
+            font-size: 0.7rem;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 14px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+        }
+        .compare-table-full tr:last-child td { border-bottom: none; }
+        .compare-color-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+        .compare-color-dot {
+            width: 12px; height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        /* Barre cohésion inline */
+        .coh-inline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex-direction: column;
+        }
+        .coh-bar-inline {
+            width: 80px; height: 6px;
+            background: var(--border-light);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .coh-bar-inline-fill { height: 100%; border-radius: 3px; }
+        /* Maisons chips dans tableau */
+        .house-chips-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 3px;
+            justify-content: center;
+            max-height: 120px;
+            overflow-y: auto;
+            padding: 2px;
+        }
+        .house-chip-sm {
+            font-size: 0.6rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            background: var(--panel2);
+            border-left: 2px solid #ccc;
+            white-space: nowrap;
+        }
+
+    
+        /* ── CLASSEMENT RÉGIONS ── */
+        .ranking-list { display: flex; flex-direction: column; gap: 8px; }
+        .ranking-row {
+            display: grid;
+            grid-template-columns: 36px 1fr 200px 120px;
+            align-items: center;
+            gap: 12px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: box-shadow 0.15s;
+        }
+        .ranking-row:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .ranking-pos {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--gold-light);
+            text-align: center;
+        }
+        .ranking-pos.gold   { color: #c8a84b; }
+        .ranking-pos.silver { color: #a0a8b0; }
+        .ranking-pos.bronze { color: #b8784a; }
+        .ranking-name {
+            font-family: 'Cinzel', serif;
+            font-size: 0.88rem;
+            color: var(--text);
+            font-weight: 700;
+        }
+        .ranking-name span {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.72rem;
+            color: #aaa;
+            font-weight: 400;
+            margin-left: 6px;
+        }
+        .ranking-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ranking-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: var(--border-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .ranking-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+        .ranking-val {
+            font-weight: 700;
+            font-size: 0.82rem;
+            color: var(--text);
+            text-align: right;
+            white-space: nowrap;
+        }
+        @media(max-width:600px) {
+            .ranking-row { grid-template-columns: 30px 1fr; grid-template-rows: auto auto; }
+            .ranking-bar-wrap { grid-column: 1/-1; }
+            .ranking-val { grid-column: 1/-1; text-align: left; }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="site-header">
+    <h1>⚔ Conseil de Guerre</h1>
+    <p>La Danse des Dragons — État des forces à la mort de Viserys Ier</p>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" id="btn-tab-maisons"  onclick="switchTab('maisons')">🛡 Maisons</button>
+    <button class="tab-btn"        id="btn-tab-regions"  onclick="switchTab('regions')">🗺 Régions</button>
+    <button class="tab-btn"        id="btn-tab-factions" onclick="switchTab('factions')">⚔ Factions</button>
+    <button class="tab-btn"        id="btn-tab-echelles" onclick="switchTab('echelles')" style="color:#5a3e00;">⚖ Échelles</button>
+    <button class="tab-btn"        id="btn-tab-edit"     onclick="switchTab('edit')" style="margin-left:auto;color:#8b0000;border-color:#8b0000;">✎ Édition MJ</button>
+</div>
+
+<!-- VUE MAISONS -->
+<div id="view-maisons" class="view-section active">
+    <div class="controls">
+        <div class="filter-row">
+            <div>
+                <span class="filter-label">Région :</span>
+                <select id="regionFilter" onchange="applyFilter()">
+                    <option value="all">Toutes les régions</option>
+                </select>
+                <span class="filter-label" style="margin-left:16px">Faction :</span>
+                <select id="factionFilter" onchange="applyFilter()">
+                    <option value="all">Toutes les factions</option>
+                    <option value="Vert">Faction Verte</option>
+                    <option value="Rouge">Faction Rouge</option>
+                    <option value="Noire">Faction Noire</option>
+                    <option value="Neutres">Neutres</option>
+                </select>
+            </div>
+            <div style="font-size:0.8rem;color:#999;font-style:italic;">Cochez les maisons à comparer sur le radar</div>
+        </div>
+        <div class="grid" id="btnContainer"></div>
+    </div>
+    <div class="chart-box"><canvas id="radar"></canvas></div>
+    <div class="cards" id="cardContainer"></div>
+</div>
+
+<!-- VUE RÉGIONS -->
+<div id="view-regions" class="view-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div class="section-title" style="margin:0;border:none;padding:0;">Régions de Westeros</div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="setRegTab('compare',this)" class="view-toggle-btn active" id="regTabCompare">⚖ Comparatif</button>
+            <button onclick="setRegTab('ranking',this)" class="view-toggle-btn" id="regTabRanking">🏆 Classement</button>
+        </div>
+    </div>
+    <!-- Vue Comparatif -->
+    <div id="regViewCompare">
+        <div style="font-size:0.8rem;color:#999;font-style:italic;margin-bottom:12px;">Sélectionnez jusqu'à 3 régions à comparer</div>
+        <div id="regionCardGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:24px;"></div>
+        <div id="regionCompareWrap" style="display:none;"></div>
+    </div>
+    <!-- Vue Classement -->
+    <div id="regViewRanking" style="display:none;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:7px;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:0.72rem;color:var(--gold);font-family:Cinzel;white-space:nowrap;font-weight:700;">Trier par</span>
+                <select id="rankingStat1" onchange="renderRegionRanking()" style="flex:1;font-size:0.8rem;">
+                    <option value="Mil. Terrestre">⚔ Mil. Terrestre</option>
+                    <option value="Mil. Naval">⚓ Mil. Naval</option>
+                    <option value="Terres">🌾 Terres</option>
+                    <option value="Commerce">💰 Commerce</option>
+                    <option value="Population" selected>👥 Population</option>
+                    <option value="Défensif">🏰 Défensif</option>
+                    <option value="Influence">👑 Influence</option>
+                    <option value="Diplomatie">🤝 Diplomatie</option>
+                    <option value="Cohésion">⚜ Cohésion interne</option>
+                    <option value="_cohesion">🔗 Cohésion régionale</option>
+                </select>
+            </div>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:7px;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:0.72rem;color:#aaa;font-family:Cinzel;white-space:nowrap;font-weight:700;">Col. 2</span>
+                <select id="rankingStat2" onchange="renderRegionRanking()" style="flex:1;font-size:0.8rem;">
+                    <option value="Mil. Terrestre" selected>⚔ Mil. Terrestre</option>
+                    <option value="Mil. Naval">⚓ Mil. Naval</option>
+                    <option value="Terres">🌾 Terres</option>
+                    <option value="Commerce">💰 Commerce</option>
+                    <option value="Population">👥 Population</option>
+                    <option value="Défensif">🏰 Défensif</option>
+                    <option value="Influence">👑 Influence</option>
+                    <option value="Diplomatie">🤝 Diplomatie</option>
+                    <option value="Cohésion">⚜ Cohésion interne</option>
+                    <option value="_cohesion">🔗 Cohésion régionale</option>
+                </select>
+            </div>
+            <div style="background:var(--white);border:1px solid var(--border);border-radius:7px;padding:10px 14px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:0.72rem;color:#aaa;font-family:Cinzel;white-space:nowrap;font-weight:700;">Col. 3</span>
+                <select id="rankingStat3" onchange="renderRegionRanking()" style="flex:1;font-size:0.8rem;">
+                    <option value="Mil. Terrestre">⚔ Mil. Terrestre</option>
+                    <option value="Mil. Naval">⚓ Mil. Naval</option>
+                    <option value="Terres">🌾 Terres</option>
+                    <option value="Commerce">💰 Commerce</option>
+                    <option value="Population">👥 Population</option>
+                    <option value="Défensif">🏰 Défensif</option>
+                    <option value="Influence">👑 Influence</option>
+                    <option value="Diplomatie">🤝 Diplomatie</option>
+                    <option value="Cohésion">⚜ Cohésion interne</option>
+                    <option value="_cohesion" selected>🔗 Cohésion régionale</option>
+                </select>
+            </div>
+        </div>
+        <div id="regionRankingList"></div>
+    </div>
+</div>
+
+<!-- VUE FACTIONS -->
+<div id="view-factions" class="view-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div class="section-title" style="margin:0;border:none;padding:0;">Factions de Westeros</div>
+        <div style="font-size:0.8rem;color:#999;font-style:italic;">Sélectionnez jusqu'à 3 factions à comparer</div>
+    </div>
+    <div id="factionCardGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:24px;"></div>
+    <div id="factionCompareWrap" style="display:none;"></div>
+</div>
+
+<script>
+// ================================================================
+// COHÉSION RÉGIONALE — MODIFIER ICI
+// cohesionPct : 0 à 100 | statCohesion : Fragmentée/Tendue/Stable/Soudée/Unie
+// ================================================================
+const regionDetails = {
+    "Nord":                  { cohesionPct: 65, statCohesion: "Stable",  forcesTerrestres: "45 000 – 60 000 h.", forcesNavales: "75 – 126 nav." },
+    "Îles de Fer":           { cohesionPct: 72, statCohesion: "Soudée",  forcesTerrestres: "20 000 – 25 000 h.", forcesNavales: "150 – 220 nav." },
+    "Conflans":              { cohesionPct: 55, statCohesion: "Stable",  forcesTerrestres: "25 000 – 35 000 h.", forcesNavales: "30 – 50 nav." },
+    "Val d'Arryn":           { cohesionPct: 78, statCohesion: "Soudée",  forcesTerrestres: "15 000 – 20 000 h.", forcesNavales: "15 – 30 nav." },
+    "Terres de la Couronne": { cohesionPct: 35, statCohesion: "Tendue",  forcesTerrestres: "30 000 – 45 000 h.", forcesNavales: "40 – 70 nav." },
+    "Terres de l'Ouest":     { cohesionPct: 68, statCohesion: "Stable",  forcesTerrestres: "35 000 – 45 000 h.", forcesNavales: "20 – 40 nav." },
+    "Terres de l'Orage":     { cohesionPct: 60, statCohesion: "Stable",  forcesTerrestres: "20 000 – 30 000 h.", forcesNavales: "25 – 45 nav." },
+    "Bief":                  { cohesionPct: 72, statCohesion: "Soudée",  forcesTerrestres: "80 000 – 100 000 h.", forcesNavales: "170 – 230 nav." },
+    "Dorne":                 { cohesionPct: 82, statCohesion: "Soudée",  forcesTerrestres: "20 000 – 30 000 h.", forcesNavales: "30 – 60 nav." },
+    "Peyredragon":           { cohesionPct: 84, statCohesion: "Soudée",  forcesTerrestres: "10 000 – 15 000 h.", forcesNavales: "200 – 280 nav." },
+    "Degrés de Pierre":      { cohesionPct: 45, statCohesion: "Tendue",  forcesTerrestres: "5 000 – 10 000 h.",  forcesNavales: "80 – 150 nav." },
+};
+
+// ================================================================
+// DONNÉES DES MAISONS
+// stats : Terres / Commerce / Population / Influence / Diplomatie
+//         Cohésion / Défensif / Mil.Terrestre / Mil.Naval
+// faction : "Vert" | "Rouge" | "Noire" | "Neutres"
+// ================================================================
+const housesData = {
+
+  "Nord": [
+    { nom:"Stark",            faction:"Neutres", couleur:"rgba(85,107,117,1)",
+      stats:{"Terres":6,"Commerce":3,"Population":8,"Influence":8,"Diplomatie":5,"Cohésion":8,"Défensif":8,"Mil. Terrestre":8,"Mil. Naval":2},
+      desc:"Suzerains du Nord. Cregan Stark à son apogée. Forces terrestres massives, cohésion exemplaire." },
+    { nom:"Manderly",         faction:"Neutres", couleur:"rgba(70,130,180,1)",
+      stats:{"Terres":4,"Commerce":8,"Population":6,"Influence":6,"Diplomatie":7,"Cohésion":7,"Défensif":6,"Mil. Terrestre":6,"Mil. Naval":6},
+      desc:"Seigneurs de Blancport. Principal vassal du Nord. Seule flotte nordique, richesse commerciale atypique." },
+    { nom:"Bolton",           faction:"Neutres", couleur:"rgba(139,0,0,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":6,"Influence":4,"Diplomatie":2,"Cohésion":5,"Défensif":8,"Mil. Terrestre":5,"Mil. Naval":1},
+      desc:"Seigneurs de Fort-Terreur. Rivaux des Stark. Dreadfort imprenable, diplomatie quasi nulle." },
+    { nom:"Karstark",         faction:"Neutres", couleur:"rgba(20,20,20,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":5,"Influence":3,"Diplomatie":3,"Cohésion":7,"Défensif":7,"Mil. Terrestre":5,"Mil. Naval":1},
+      desc:"Sang des Stark. Territoire montagneux nord-est. Guerriers aguerris, terres pauvres." },
+    { nom:"Omble",            faction:"Neutres", couleur:"rgba(160,32,240,0.9)",
+      stats:{"Terres":4,"Commerce":2,"Population":5,"Influence":4,"Diplomatie":3,"Cohésion":7,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":1},
+      desc:"Seigneurs d'Umber. Dernière Hearth. Guerriers féroces, loyauté absolue aux Stark." },
+    { nom:"Dustin",           faction:"Neutres", couleur:"rgba(184,134,11,1)",
+      stats:{"Terres":6,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs de Barrowton. Cavaliers réputés. Terres agricoles de l'ouest du Nord." },
+    { nom:"Ryswell",          faction:"Neutres", couleur:"rgba(218,165,32,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Cavaliers des plaines. Maîtres de la cavalerie nordique, proches des Dustin." },
+    { nom:"Mormont",          faction:"Neutres", couleur:"rgba(0,80,0,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":8,"Défensif":7,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Île aux Ours. Guerriers légendaires. Loyauté absolue aux Stark, territoire exigu." },
+    { nom:"Reed",             faction:"Neutres", couleur:"rgba(47,79,47,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":4,"Influence":3,"Diplomatie":4,"Cohésion":8,"Défensif":9,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Maîtres du Neck. Le Neck quasi infranchissable. Ressources très limitées, autarcie." },
+    { nom:"Cerwyn",           faction:"Neutres", couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Vassaux loyaux proches de Winterfell. Maison fiable sans caractéristique dominante." },
+    { nom:"Corbois",          faction:"Neutres", couleur:"rgba(101,67,33,1)",
+      stats:{"Terres":5,"Commerce":2,"Population":4,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Maîtres des forêts. Ressources forestières notables. Maison discrète." },
+    { nom:"Locke",            faction:"Neutres", couleur:"rgba(139,69,19,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Chasseurs redoutables. Territoire côtier nord-ouest. Maison ancienne et discrète." },
+    { nom:"Flint de La Veuve",faction:"Neutres", couleur:"rgba(100,100,100,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":7,"Défensif":7,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Gardiens des passes. Territoire côtier et montagneux. Défense naturelle notable." },
+    { nom:"Glenmore",         faction:"Neutres", couleur:"rgba(105,105,105,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":1},
+      desc:"Maison mineure. Peu de ressources ou d'influence. Loyauté correcte." },
+    { nom:"Stout",            faction:"Neutres", couleur:"rgba(188,143,143,1)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":1},
+      desc:"Maison fidèle. Petite maison vassale proche de Barrowton." }
+  ],
+
+  "Îles de Fer": [
+    { nom:"Greyjoy",                   faction:"Neutres", couleur:"rgba(30,30,30,1)",
+      stats:{"Terres":2,"Commerce":4,"Population":4,"Influence":4,"Diplomatie":3,"Cohésion":7,"Défensif":8,"Mil. Terrestre":2,"Mil. Naval":6},
+      desc:"Ce qui est mort ne peut mourir. Suzerains des Îles. Puissance navale dominante, terres stériles." },
+    { nom:"Harloi",                    faction:"Neutres", couleur:"rgba(10,10,10,0.9)",
+      stats:{"Terres":2,"Commerce":3,"Population":3,"Influence":4,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":5},
+      desc:"Faucheuse noire. Deuxième maison des Îles, rivaux des Greyjoy. Flotte importante." },
+    { nom:"Volmark",                   faction:"Neutres", couleur:"rgba(30,60,30,1)",
+      stats:{"Terres":2,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":2,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Ancienne lignée de fer. Vieille maison des Îles, flotte solide." },
+    { nom:"Botley",                    faction:"Neutres", couleur:"rgba(34,139,34,0.9)",
+      stats:{"Terres":2,"Commerce":4,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Seigneurs de Lordport. Port actif, commerce plus développé que la moyenne des Îles." },
+    { nom:"Bonfrère de Cormartel",     faction:"Neutres", couleur:"rgba(60,60,60,0.9)",
+      stats:{"Terres":2,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":2,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Raiders de Cormartel. Maison de raiders aguerris, flotte locale." },
+    { nom:"Bonfrère d'Orkmont",        faction:"Neutres", couleur:"rgba(65,65,65,0.9)",
+      stats:{"Terres":2,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Guerriers d'Orkmont. Piliers de la flotte des Îles." },
+    { nom:"Bonfrère de Shatterstone",  faction:"Neutres", couleur:"rgba(55,55,55,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Défenseurs de Shatterstone. Maison secondaire des Îles." },
+    { nom:"Merlyn",                    faction:"Neutres", couleur:"rgba(50,50,50,0.9)",
+      stats:{"Terres":2,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Seigneurs de Pierresanglante. Maison modeste des Îles." },
+    { nom:"Noirmarées",                faction:"Neutres", couleur:"rgba(25,25,25,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Gardiens des eaux sombres. Petite maison des Îles." },
+    { nom:"Orquebois",                 faction:"Neutres", couleur:"rgba(45,45,45,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Raiders farouches. Maison de pillards, peu de terres." },
+    { nom:"Salfalaise",                faction:"Neutres", couleur:"rgba(55,55,55,0.9)",
+      stats:{"Terres":2,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Marins endurcis. Petite flotte côtière." },
+    { nom:"Tawney",                    faction:"Neutres", couleur:"rgba(60,60,60,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":7,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Fidèles aux Greyjoy. Petite maison loyale." },
+    { nom:"Timbal",                    faction:"Neutres", couleur:"rgba(50,50,50,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Guerriers des îles. Maison de combat." },
+    { nom:"Valleuse",                  faction:"Neutres", couleur:"rgba(45,45,45,0.9)",
+      stats:{"Terres":2,"Commerce":3,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Navigateurs agiles. Marins expérimentés." },
+    { nom:"Vendeloyn",                 faction:"Neutres", couleur:"rgba(55,55,55,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Pillards côtiers. Petite maison de raiders." },
+    { nom:"Wynch",                     faction:"Neutres", couleur:"rgba(50,50,50,0.9)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":1,"Mil. Naval":3},
+      desc:"Marins des îles. Maison modeste." }
+  ],
+
+  "Conflans": [
+    { nom:"Tully",              faction:"Noire",   couleur:"rgba(220,20,60,1)",
+      stats:{"Terres":7,"Commerce":5,"Population":7,"Influence":6,"Diplomatie":6,"Cohésion":7,"Défensif":7,"Mil. Terrestre":6,"Mil. Naval":6},
+      desc:"Seigneurs de Vivesaigues. Carrefour stratégique de Westeros. Alliance avec Rhaenyra." },
+    { nom:"Mallister",          faction:"Noire",   couleur:"rgba(70,130,180,1)",
+      stats:{"Terres":5,"Commerce":5,"Population":5,"Influence":5,"Diplomatie":4,"Cohésion":7,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":5},
+      desc:"Seigneurs de Seagard. Port important, flotte fluviale. Loyaux aux Tully." },
+    { nom:"Bracken",            faction:"Neutres", couleur:"rgba(218,165,32,1)",
+      stats:{"Terres":6,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Rivaux éternels des Blackwood. Maison guerrière des terres du fleuve." },
+    { nom:"Frey",               faction:"Neutres", couleur:"rgba(112,128,144,1)",
+      stats:{"Terres":5,"Commerce":8,"Population":6,"Influence":5,"Diplomatie":5,"Cohésion":5,"Défensif":7,"Mil. Terrestre":4,"Mil. Naval":3},
+      desc:"Seigneurs du Pont des Jumeaux. Péage incontournable, richesse commerciale passive." },
+    { nom:"Whent",              faction:"Neutres", couleur:"rgba(0,0,0,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":4,"Diplomatie":3,"Cohésion":5,"Défensif":8,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Gardiens de Harrenhal. La forteresse la plus grande de Westeros, maudite mais imprenable." },
+    { nom:"Vance d'Atranta",    faction:"Noire",   couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Branche d'Atranta. Maison solide du Conflans." },
+    { nom:"Vance de Bel Accueil",faction:"Noire",  couleur:"rgba(165,42,42,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":5,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Branche de Bel Accueil. Cadet des Vance." },
+    { nom:"Piper",              faction:"Noire",   couleur:"rgba(218,165,32,0.9)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de La Pierre aux Runes. Vassaux loyaux des Tully." },
+    { nom:"Darry",              faction:"Vert",    couleur:"rgba(139,69,19,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs de Darry. Faction Verte pendant la Danse des Dragons." },
+    { nom:"Beurpuits",          faction:"Neutres", couleur:"rgba(184,134,11,0.9)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Vassaux du Confluent. Maison modeste du Conflans." },
+    { nom:"Bonru",              faction:"Neutres", couleur:"rgba(160,160,160,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Chevaliers du fleuve. Maison fluviale modeste." },
+    { nom:"Charlton",           faction:"Neutres", couleur:"rgba(150,150,150,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Maison du fleuve. Vassal standard des Tully." },
+    { nom:"Desdaings",          faction:"Neutres", couleur:"rgba(140,140,140,1)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Petite maison. Vassal mineur du Conflans." },
+    { nom:"Harlton",            faction:"Neutres", couleur:"rgba(150,150,150,0.9)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Vassaux des Tully. Petite maison fidèle." },
+    { nom:"Lychester",          faction:"Neutres", couleur:"rgba(140,140,140,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Gardiens de ponts. Position stratégique sur les rivières." },
+    { nom:"Mouton",             faction:"Neutres", couleur:"rgba(192,192,192,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Éleveurs du Confluent. Terres agricoles, maison modeste." },
+    { nom:"Nerbosc",            faction:"Neutres", couleur:"rgba(128,128,128,1)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Fiers et indomptables. Petite maison guerrière." },
+    { nom:"Petibois",           faction:"Neutres", couleur:"rgba(101,67,33,0.9)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Maîtres des bois. Ressources forestières modestes." },
+    { nom:"Racin",              faction:"Neutres", couleur:"rgba(150,150,150,0.8)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Chevaliers du fleuve. Maison fluviale." },
+    { nom:"Vyprin",             faction:"Neutres", couleur:"rgba(140,140,140,0.8)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Petite maison. Vassal mineur." }
+  ],
+
+  "Val d'Arryn": [
+    { nom:"Arryn",                    faction:"Neutres", couleur:"rgba(135,206,235,1)",
+      stats:{"Terres":4,"Commerce":5,"Population":6,"Influence":6,"Diplomatie":5,"Cohésion":8,"Défensif":10,"Mil. Terrestre":5,"Mil. Naval":2},
+      desc:"Aussi haut que l'honneur. Jeyne Arryn. Nid d'Aigle imprenable. Neutralité stratégique." },
+    { nom:"Royce de Roches-aux-runes",faction:"Neutres", couleur:"rgba(218,165,32,1)",
+      stats:{"Terres":5,"Commerce":5,"Population":5,"Influence":5,"Diplomatie":5,"Cohésion":7,"Défensif":7,"Mil. Terrestre":5,"Mil. Naval":2},
+      desc:"Premiers Hommes du Val. Plus puissante maison du Val. Guerriers légendaires." },
+    { nom:"Grafton",                  faction:"Neutres", couleur:"rgba(105,105,105,1)",
+      stats:{"Terres":4,"Commerce":7,"Population":5,"Influence":5,"Diplomatie":6,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":5},
+      desc:"Seigneurs de Goelette. Port majeur du Val, commerce actif vers Braavos." },
+    { nom:"Sunderland",               faction:"Neutres", couleur:"rgba(70,130,180,1)",
+      stats:{"Terres":4,"Commerce":5,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":5,"Défensif":7,"Mil. Terrestre":3,"Mil. Naval":5},
+      desc:"Seigneurs des Trois Sœurs. Maîtres du Goulet. Position maritime stratégique." },
+    { nom:"Corbray",                  faction:"Neutres", couleur:"rgba(180,180,180,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":4,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":1},
+      desc:"Porteurs de Lady Forlorn. Guerriers réputés, économie modeste." },
+    { nom:"Belmore",                  faction:"Neutres", couleur:"rgba(112,128,144,1)",
+      stats:{"Terres":4,"Commerce":4,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Fiers vassaux. Maison solide du Val, proche des Arryn." },
+    { nom:"Borrell",                  faction:"Neutres", couleur:"rgba(60,60,60,1)",
+      stats:{"Terres":3,"Commerce":4,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Marins des côtes. Vassaux des Sunderland, flotte côtière." },
+    { nom:"Torrent",                  faction:"Neutres", couleur:"rgba(100,149,237,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Maîtres des cours d'eau. Vassaux des Sunderland." },
+    { nom:"Lynderly",                 faction:"Neutres", couleur:"rgba(147,112,219,0.9)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Vassaux des Arryn. Maison modeste du Val." },
+    { nom:"Rougefort",                faction:"Neutres", couleur:"rgba(178,34,34,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Guerriers du Val. Maison militaire modeste." },
+    { nom:"Elesham",                  faction:"Neutres", couleur:"rgba(176,196,222,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":7,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Gardiens des cols. Défense des passes montagneuses." },
+    { nom:"Froideseaux",              faction:"Neutres", couleur:"rgba(173,216,230,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Terres froides. Maison modeste des hauteurs." },
+    { nom:"Baelish",                  faction:"Neutres", couleur:"rgba(47,79,79,1)",
+      stats:{"Terres":2,"Commerce":3,"Population":2,"Influence":2,"Diplomatie":3,"Cohésion":5,"Défensif":4,"Mil. Terrestre":1,"Mil. Naval":1},
+      desc:"Seigneurs de Pyc. Toute petite maison récente, peu de poids militaire." },
+    { nom:"Lonhameau",                faction:"Neutres", couleur:"rgba(112,128,144,0.9)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Gardiens des hameaux. Petite maison rurale." },
+    { nom:"Tallett",                  faction:"Neutres", couleur:"rgba(169,169,169,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Petite maison du Val. Vassal modeste." },
+    { nom:"Vanbois",                  faction:"Neutres", couleur:"rgba(85,107,47,1)",
+      stats:{"Terres":4,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Gardiens des forêts. Ressources forestières modestes." },
+    { nom:"Veneur",                   faction:"Neutres", couleur:"rgba(139,69,19,0.9)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Experts de la chasse. Petite maison." }
+  ],
+
+  "Terres de l'Ouest": [
+    { nom:"Lannister",      faction:"Neutres", couleur:"rgba(212,175,55,1)",
+      stats:{"Terres":6,"Commerce":9,"Population":6,"Influence":7,"Diplomatie":7,"Cohésion":6,"Défensif":8,"Mil. Terrestre":7,"Mil. Naval":3},
+      desc:"Suzerains de l'Ouest. Mines d'or de Castral Roc. Discrets mais incontournables au conseil." },
+    { nom:"Crakehall",      faction:"Neutres", couleur:"rgba(165,42,42,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":5,"Mil. Naval":2},
+      desc:"Seigneurs de Crakehall. Grande maison guerrière de l'Ouest, réputée pour ses chevaliers." },
+    { nom:"Farman",         faction:"Neutres", couleur:"rgba(70,130,180,1)",
+      stats:{"Terres":4,"Commerce":6,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":5},
+      desc:"Seigneurs de Faircastel. Maison côtière, flotte marchande active. Commerce maritime." },
+    { nom:"Westerling",     faction:"Neutres", couleur:"rgba(128,0,128,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Château Pluie. Maison ancienne et honorable de l'Ouest." },
+    { nom:"Brax",           faction:"Neutres", couleur:"rgba(0,128,128,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Château-Griff. Vassaux loyaux des Lannister, cavaliers réputés." },
+    { nom:"Prestre",        faction:"Neutres", couleur:"rgba(255,140,0,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":3},
+      desc:"Seigneurs de Bois-du-Lys. Maison côtière de l'Ouest." },
+    { nom:"Lefford",        faction:"Neutres", couleur:"rgba(218,165,32,1)",
+      stats:{"Terres":5,"Commerce":5,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":3},
+      desc:"Gardiens du Passage d'Or. Position stratégique, contrôle du col." },
+    { nom:"Marbrand",       faction:"Neutres", couleur:"rgba(178,34,34,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs d'Ashemark. Maison guerrière de l'Ouest." },
+    { nom:"Banefort",       faction:"Neutres", couleur:"rgba(47,79,79,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":3},
+      desc:"Seigneurs de Banefort. Maison côtière, défense maritime." },
+    { nom:"Sarsfield",      faction:"Neutres", couleur:"rgba(107,142,35,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Vassaux des Lannister. Maison modeste de l'Ouest." },
+    { nom:"Serrett",        faction:"Neutres", couleur:"rgba(176,196,222,1)",
+      stats:{"Terres":4,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":4,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de La Colline aux Ivoires. Maison connue pour sa beauté et ses liens." },
+    { nom:"Lydden",         faction:"Neutres", couleur:"rgba(139,90,43,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Maison de l'Ouest. Vassal modeste des Lannister." },
+    { nom:"Kenning",        faction:"Neutres", couleur:"rgba(105,105,105,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Seigneurs de Kayce. Port côtier de l'Ouest." },
+    { nom:"Ruttiger",       faction:"Neutres", couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Vassaux des Lannister. Petite maison modeste." },
+    { nom:"Payne",          faction:"Neutres", couleur:"rgba(128,128,128,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Chevaliers servants des Lannister. Connus pour leur loyauté." }
+  ],
+
+  "Terres de l'Orage": [
+    { nom:"Baratheon",   faction:"Vert",    couleur:"rgba(212,175,55,1)",
+      stats:{"Terres":5,"Commerce":5,"Population":6,"Influence":6,"Diplomatie":5,"Cohésion":6,"Défensif":7,"Mil. Terrestre":5,"Mil. Naval":5},
+      desc:"Suzerains de l'Orage. Aegon II les rallie. Accalmie, forteresse côtière imposante." },
+    { nom:"Swann",       faction:"Vert",    couleur:"rgba(240,248,255,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":3},
+      desc:"Seigneurs de Pierrefort. Grande maison de l'Orage, fidèles aux Baratheon." },
+    { nom:"Selmy",       faction:"Vert",    couleur:"rgba(200,200,200,1)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":5,"Diplomatie":4,"Cohésion":7,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Moat-Boisé. Réputation militaire exceptionnelle, chevaliers d'élite." },
+    { nom:"Caron",       faction:"Vert",    couleur:"rgba(255,140,0,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de Nightsong. Marche des Dorniens, forteresse frontière." },
+    { nom:"Penrose",     faction:"Noire",   couleur:"rgba(65,105,225,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Gardiens de Parchemin. Soutien à Rhaenyra lors de la Danse des Dragons." },
+    { nom:"Dondarrion",  faction:"Neutres", couleur:"rgba(148,0,211,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs d'Havrenoir. Maison ancienne, position côtière." },
+    { nom:"Errol",       faction:"Neutres", couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Vassaux anciens. Maison modeste des Terres de l'Orage." },
+    { nom:"Fell",        faction:"Neutres", couleur:"rgba(139,0,0,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs de Chute-aux-Fel. Maison guerrière." },
+    { nom:"Grandison",   faction:"Neutres", couleur:"rgba(218,218,0,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de Grandview. Vassal standard." },
+    { nom:"Morrigen",    faction:"Neutres", couleur:"rgba(0,0,0,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de Corvoisin. Maison des terres de l'orage." },
+    { nom:"Staedmon",    faction:"Neutres", couleur:"rgba(255,140,0,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Seigneurs de Marche-Limine. Maison frontalière." },
+    { nom:"Cafferen",    faction:"Neutres", couleur:"rgba(34,139,34,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Maison guerrière. Vassal standard." },
+    { nom:"Buckler",     faction:"Neutres", couleur:"rgba(205,92,92,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de Havrenoir. Maison côtière." },
+    { nom:"Torth",       faction:"Neutres", couleur:"rgba(139,69,19,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Île des Saphirs. Position insulaire, défense naturelle." },
+    { nom:"Cossepois",   faction:"Neutres", couleur:"rgba(100,149,237,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Seigneurs côtiers. Petite maison maritime." },
+    { nom:"Estremont",   faction:"Neutres", couleur:"rgba(218,165,32,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Gardiens des monts. Maison insulaire." },
+    { nom:"Blanchef",    faction:"Neutres", couleur:"rgba(210,210,240,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Seigneurs de Blanchef. Petite maison côtière." },
+    { nom:"Wylde",       faction:"Neutres", couleur:"rgba(34,139,34,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Seigneurs de Brumeforge. Maison modeste." }
+  ],
+
+  "Terres de la Couronne": [
+    { nom:"Targaryen de Port-Réal", faction:"Vert",    couleur:"rgba(139,0,0,1)",
+      stats:{"Terres":6,"Commerce":8,"Population":8,"Influence":10,"Diplomatie":7,"Cohésion":4,"Défensif":7,"Mil. Terrestre":5,"Mil. Naval":5},
+      desc:"La Maison Royale — Aegon II. Port-Réal, Influence maximale. Cohésion effondrée par la crise." },
+    { nom:"Rykker",                 faction:"Vert",    couleur:"rgba(60,60,60,1)",
+      stats:{"Terres":4,"Commerce":4,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":3},
+      desc:"Gardiens de Duskendale. Port important, maison loyale à la Couronne." },
+    { nom:"Rosby",                  faction:"Neutres", couleur:"rgba(210,180,140,1)",
+      stats:{"Terres":4,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de Rosby. Proche de Port-Réal, maison modeste." },
+    { nom:"Chelsted",               faction:"Vert",    couleur:"rgba(218,165,32,1)",
+      stats:{"Terres":3,"Commerce":4,"Population":3,"Influence":4,"Diplomatie":4,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Conseillers du Trône. Influence politique via la proximité royale." },
+    { nom:"Brune de Repayre",       faction:"Neutres", couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Seigneurs de Repayre. Maison modeste des terres royales." },
+    { nom:"Patybulayre",            faction:"Neutres", couleur:"rgba(139,69,19,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Chevaliers des terres agricoles. Maison rurale modeste." },
+    { nom:"Castelfoyer",            faction:"Neutres", couleur:"rgba(184,134,11,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Gardiens de châteaux. Maison modeste de la couronne." },
+    { nom:"Fengué",                 faction:"Neutres", couleur:"rgba(169,169,169,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Petite maison de la couronne. Peu d'influence." },
+    { nom:"Hardy",                  faction:"Neutres", couleur:"rgba(140,140,140,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Gardiens des frontières. Maison modeste." },
+    { nom:"Harte",                  faction:"Neutres", couleur:"rgba(178,34,34,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Maison guerrière. Petite maison militaire." },
+    { nom:"Mallery",                faction:"Neutres", couleur:"rgba(100,149,237,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Seigneurs côtiers. Petite maison maritime." },
+    { nom:"Prédeaux",               faction:"Neutres", couleur:"rgba(85,107,47,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Gardiens des prairies. Maison agricole modeste." }
+  ],
+
+  "Peyredragon": [
+    { nom:"Targaryen de Peyredragon", faction:"Noire",   couleur:"rgba(80,0,160,1)",
+      stats:{"Terres":3,"Commerce":6,"Population":4,"Influence":8,"Diplomatie":7,"Cohésion":7,"Défensif":7,"Mil. Terrestre":3,"Mil. Naval":8},
+      desc:"Fief de Rhaenyra. Légitimité dynastique forte. Puissance navale Velaryon." },
+    { nom:"Velaryon",                 faction:"Noire",   couleur:"rgba(65,105,225,1)",
+      stats:{"Terres":3,"Commerce":10,"Population":5,"Influence":7,"Diplomatie":8,"Cohésion":8,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":10},
+      desc:"Seigneurs de Marée. Plus grande flotte de Westeros. Corlys Velaryon au sommet de sa puissance." },
+    { nom:"Celtigar",                 faction:"Noire",   couleur:"rgba(178,34,34,1)",
+      stats:{"Terres":3,"Commerce":6,"Population":4,"Influence":5,"Diplomatie":5,"Cohésion":7,"Défensif":6,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Seigneurs de Griffe. Ancienne maison valyarienne, flotte solide, trésorerie notable." },
+    { nom:"Bar Emmon",                faction:"Noire",   couleur:"rgba(212,175,55,1)",
+      stats:{"Terres":3,"Commerce":4,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Seigneurs de Fort-Dupont. Petite maison fidèle à Rhaenyra." },
+    { nom:"Chyttering",               faction:"Noire",   couleur:"rgba(112,128,144,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Petite maison côtière. Fidèle à Peyredragon." },
+    { nom:"Solverre",                 faction:"Noire",   couleur:"rgba(169,169,169,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Gardiens des terres sèches. Petite maison vassale." }
+  ],
+
+  "Bief": [
+    { nom:"Tyrell",            faction:"Vert",    couleur:"rgba(34,139,34,1)",
+      stats:{"Terres":9,"Commerce":7,"Population":9,"Influence":8,"Diplomatie":7,"Cohésion":6,"Défensif":6,"Mil. Terrestre":8,"Mil. Naval":3},
+      desc:"Suzerains du Bief. Grenier du royaume. Soutien essentiel à Aegon II." },
+    { nom:"Hightower",         faction:"Vert",    couleur:"rgba(128,128,128,1)",
+      stats:{"Terres":7,"Commerce":9,"Population":8,"Influence":9,"Diplomatie":8,"Cohésion":7,"Défensif":8,"Mil. Terrestre":7,"Mil. Naval":5},
+      desc:"Seigneurs de Vieuxport. Oldtown, plus grande ville de Westeros. Moteurs de la faction Verte." },
+    { nom:"Tarly",             faction:"Vert",    couleur:"rgba(180,20,40,1)",
+      stats:{"Terres":6,"Commerce":4,"Population":6,"Influence":5,"Diplomatie":4,"Cohésion":8,"Défensif":7,"Mil. Terrestre":7,"Mil. Naval":1},
+      desc:"Seigneurs de Horn Hill. Meilleure armée du Bief. Guerriers d'élite." },
+    { nom:"Redwyne",           faction:"Vert",    couleur:"rgba(100,0,100,1)",
+      stats:{"Terres":7,"Commerce":8,"Population":6,"Influence":5,"Diplomatie":5,"Cohésion":7,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":7},
+      desc:"Seigneurs de l'Arbor. Flotte majeure du Bief. Vignobles et commerce maritime." },
+    { nom:"Rowan",             faction:"Vert",    couleur:"rgba(184,134,11,1)",
+      stats:{"Terres":6,"Commerce":5,"Population":6,"Influence":5,"Diplomatie":5,"Cohésion":6,"Défensif":6,"Mil. Terrestre":5,"Mil. Naval":2},
+      desc:"Seigneurs de Goldengrove. Grande maison du Bief, soutien Vert solide." },
+    { nom:"Florent",           faction:"Neutres", couleur:"rgba(255,140,0,1)",
+      stats:{"Terres":6,"Commerce":4,"Population":5,"Influence":5,"Diplomatie":5,"Cohésion":6,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":4},
+      desc:"Seigneurs de Brightwater. Revendiquent des droits sur Hautjardin. Flotte côtière." },
+    { nom:"Caswell",           faction:"Vert",    couleur:"rgba(200,170,0,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Bitterbridge. Position stratégique sur la route royale." },
+    { nom:"Peake",             faction:"Vert",    couleur:"rgba(139,69,19,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Starpike. Maison ambitieuse du Bief." },
+    { nom:"Merryweather",      faction:"Vert",    couleur:"rgba(70,130,180,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":5,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":5,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Longtable. Maison aisée du Bief central." },
+    { nom:"Costayne",          faction:"Vert",    couleur:"rgba(210,210,210,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":4},
+      desc:"Seigneurs des Trois Tours. Maison côtière, quelques navires." },
+    { nom:"Crane",             faction:"Neutres", couleur:"rgba(210,180,140,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs de la Tour Grise. Maison modeste." },
+    { nom:"Mullendore de la Nouë",faction:"Vert", couleur:"rgba(50,180,50,0.9)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs d'Uplands. Maison du Bief." },
+    { nom:"Cuy des Essaims",   faction:"Vert",    couleur:"rgba(200,200,0,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs d'Uplands. Maison modeste du Bief." },
+    { nom:"Ambrose",           faction:"Neutres", couleur:"rgba(220,220,200,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs d'Amberly. Petite maison agricole." },
+    { nom:"Bulwer",            faction:"Neutres", couleur:"rgba(20,20,20,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs de Noircorne. Maison modeste." },
+    { nom:"Cendregué",         faction:"Neutres", couleur:"rgba(169,169,169,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Maison des terres cendreuses. Agriculteurs modestes." },
+    { nom:"Chantecoq",         faction:"Neutres", couleur:"rgba(220,80,0,1)",
+      stats:{"Terres":5,"Commerce":4,"Population":4,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Seigneurs aux terres vivantes. Agriculteurs prospères." },
+    { nom:"Chester",           faction:"Neutres", couleur:"rgba(188,143,143,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":4,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Maison ancienne. Vassal modeste du Bief." },
+    { nom:"Grimm",             faction:"Neutres", couleur:"rgba(50,50,50,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Seigneurs de Grimston. Maison côtière modeste." },
+    { nom:"Houëtt",            faction:"Neutres", couleur:"rgba(160,82,45,0.9)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Petite maison. Vassal mineur." },
+    { nom:"Risley du Rouvre",  faction:"Neutres", couleur:"rgba(230,230,230,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Chevaliers du Rouvre. Petite maison fidèle." },
+    { nom:"Serry",             faction:"Neutres", couleur:"rgba(220,80,0,0.9)",
+      stats:{"Terres":3,"Commerce":4,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":4},
+      desc:"Seigneurs de Southshield. Île au sud de l'Arbor, petite flotte." },
+    { nom:"Stackhouse",        faction:"Neutres", couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Maison fidèle du Bief. Vassal standard." },
+    { nom:"Tyssier",           faction:"Neutres", couleur:"rgba(218,165,32,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Seigneurs de Tally Hill. Petite maison." },
+    { nom:"Varnier",           faction:"Neutres", couleur:"rgba(34,120,34,0.9)",
+      stats:{"Terres":5,"Commerce":3,"Population":4,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Gardiens des terres vertes. Agriculteurs." },
+    { nom:"Vouyvère",          faction:"Neutres", couleur:"rgba(65,105,180,0.9)",
+      stats:{"Terres":3,"Commerce":4,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":3},
+      desc:"Seigneurs côtiers. Petite flotte marchande." },
+    { nom:"Willum",            faction:"Neutres", couleur:"rgba(139,69,19,0.9)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":1},
+      desc:"Vassaux fidèles. Petite maison agricole." }
+  ],
+
+  "Dorne": [
+    { nom:"Martell",           faction:"Neutres", couleur:"rgba(255,140,0,1)",
+      stats:{"Terres":5,"Commerce":6,"Population":6,"Influence":7,"Diplomatie":7,"Cohésion":8,"Défensif":9,"Mil. Terrestre":5,"Mil. Naval":6},
+      desc:"Princes de Dorne. Insoumis, Invaincus, Intacts. Hors du conflit. Défense légendaire." },
+    { nom:"Dayne des Météores", faction:"Neutres", couleur:"rgba(148,0,211,1)",
+      stats:{"Terres":4,"Commerce":3,"Population":3,"Influence":6,"Diplomatie":4,"Cohésion":7,"Défensif":7,"Mil. Terrestre":6,"Mil. Naval":2},
+      desc:"Seigneurs de Starfall. Maîtres de l'Épée Aube. Réputation martiale incomparable." },
+    { nom:"Allyrion",          faction:"Neutres", couleur:"rgba(218,165,32,1)",
+      stats:{"Terres":4,"Commerce":4,"Population":4,"Influence":4,"Diplomatie":4,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":3},
+      desc:"Seigneurs de Dieusaut. Gardiens de la tradition Rhoynar." },
+    { nom:"Qorgyle",           faction:"Neutres", couleur:"rgba(139,0,0,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":7,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Sandstone. Maîtres des sables, défense désertique redoutable." },
+    { nom:"Uller",             faction:"Neutres", couleur:"rgba(220,20,60,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":3,"Diplomatie":2,"Cohésion":5,"Défensif":6,"Mil. Terrestre":4,"Mil. Naval":2},
+      desc:"Seigneurs de Hellholt. Maison dangereuse et imprévisible." },
+    { nom:"Toland",            faction:"Neutres", couleur:"rgba(0,100,0,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":6,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Seigneurs de Ghost Hill. Gardiens de l'est dornien." },
+    { nom:"Gargalen",          faction:"Neutres", couleur:"rgba(30,144,255,1)",
+      stats:{"Terres":3,"Commerce":4,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":4},
+      desc:"Seigneurs de Salt Shore. Maîtres de la côte sud dornienne." },
+    { nom:"Jordayne",          faction:"Neutres", couleur:"rgba(210,180,140,1)",
+      stats:{"Terres":3,"Commerce":3,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":3},
+      desc:"Seigneurs de La Tour. Maison de la côte dornienne." },
+    { nom:"Noirmont",          faction:"Neutres", couleur:"rgba(50,50,50,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":3,"Influence":2,"Diplomatie":2,"Cohésion":6,"Défensif":7,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Gardiens des montagnes noires. Défense naturelle en zone montagneuse." },
+    { nom:"Ferboys",           faction:"Neutres", couleur:"rgba(178,34,34,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":2},
+      desc:"Maison guerrière de Dorne. Férocité reconnue." },
+    { nom:"Forrest",           faction:"Neutres", couleur:"rgba(34,139,34,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":6,"Mil. Terrestre":3,"Mil. Naval":1},
+      desc:"Gardiens des bois de Dorne. Maison modeste." },
+    { nom:"Poulet",            faction:"Neutres", couleur:"rgba(255,69,0,1)",
+      stats:{"Terres":2,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Petite maison de Dorne. Vassal mineur." },
+    { nom:"le Voi",            faction:"Neutres", couleur:"rgba(160,82,45,1)",
+      stats:{"Terres":3,"Commerce":2,"Population":2,"Influence":2,"Diplomatie":2,"Cohésion":5,"Défensif":5,"Mil. Terrestre":2,"Mil. Naval":2},
+      desc:"Gardiens des voies du désert. Maison modeste." }
+  ],
+
+  "Degrés de Pierre": [
+    { nom:"Stepstone Corsaires", faction:"Rouge",   couleur:"rgba(139,0,0,1)",
+      stats:{"Terres":2,"Commerce":6,"Population":3,"Influence":4,"Diplomatie":2,"Cohésion":4,"Défensif":5,"Mil. Terrestre":3,"Mil. Naval":6},
+      desc:"Forces libres des Degrés de Pierre. Corsaires et aventuriers. Aucune allégeance fixe." },
+    { nom:"Velaryon (Sealord)",  faction:"Noire",   couleur:"rgba(30,80,200,1)",
+      stats:{"Terres":2,"Commerce":5,"Population":2,"Influence":3,"Diplomatie":4,"Cohésion":6,"Défensif":4,"Mil. Terrestre":1,"Mil. Naval":5},
+      desc:"Garnison Velaryon aux Degrés. Avant-poste naval de Driftmark sur les routes maritimes." },
+    { nom:"Saan",                faction:"Neutres", couleur:"rgba(100,60,20,1)",
+      stats:{"Terres":1,"Commerce":7,"Population":2,"Influence":4,"Diplomatie":5,"Cohésion":4,"Défensif":3,"Mil. Terrestre":2,"Mil. Naval":6},
+      desc:"Marchands-pirates des Degrés. Salladhor Saan avant l'heure. Commerce et piraterie mêlés." },
+    { nom:"Lyseni",              faction:"Neutres", couleur:"rgba(180,140,50,1)",
+      stats:{"Terres":2,"Commerce":6,"Population":3,"Influence":3,"Diplomatie":4,"Cohésion":4,"Défensif":4,"Mil. Terrestre":2,"Mil. Naval":5},
+      desc:"Forces de Lys présentes aux Degrés. Commerce et mercenariat." },
+    { nom:"Myriens",             faction:"Neutres", couleur:"rgba(160,40,40,1)",
+      stats:{"Terres":2,"Commerce":5,"Population":3,"Influence":3,"Diplomatie":3,"Cohésion":4,"Défensif":4,"Mil. Terrestre":3,"Mil. Naval":5},
+      desc:"Forces de Myr aux Degrés. Arbalétriers réputés et marchands." }
+  ]
+
+};
+
+// ================================================================
+// LOGIQUE — NE PAS MODIFIER EN DESSOUS
+// ================================================================
+const labels = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+
+const factionColors = { "Vert":"#2e6b1f", "Rouge":"#8b0000", "Noire":"#1a1a3e", "Neutres":"#5a5a5a" };
+const factionNames  = { "Vert":"Faction Verte", "Rouge":"Faction Rouge", "Noire":"Faction Noire", "Neutres":"Neutres" };
+const factionBg     = { "Vert":"rgba(46,107,31,0.15)", "Rouge":"rgba(139,0,0,0.15)", "Noire":"rgba(26,26,62,0.15)", "Neutres":"rgba(90,90,90,0.12)" };
+
+let chartInst = null;
+let flatHouses = {};
+
+function cohesionColor(pct) {
+    if(pct >= 80) return "#2e6b1f";
+    if(pct >= 65) return "#8b6c28";
+    if(pct >= 45) return "#cc6600";
+    return "#8b0000";
+}
+
+function init() {
+    const container = document.getElementById('btnContainer');
+    const regFilter  = document.getElementById('regionFilter');
+    container.innerHTML = '';
+    flatHouses = {};
+
+    for(const [region, houses] of Object.entries(housesData)) {
+        const opt = document.createElement('option');
+        opt.value = region; opt.innerText = region;
+        regFilter.appendChild(opt);
+
+        if(!houses) continue;
+        houses.forEach(h => {
+            h.region = region;
+            flatHouses[h.nom] = h;
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.id   = 'cb_' + h.nom.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'');
+            cb.value = h.nom;
+            cb.dataset.region  = region;
+            cb.dataset.faction = h.faction || 'Neutres';
+            cb.onchange = updateDashboard;
+
+            const lbl = document.createElement('label');
+            lbl.htmlFor = cb.id;
+            lbl.innerText = h.nom;
+            // Couleur bord gauche = couleur de la faction
+            const fc = factionColors[h.faction] || factionColors.Neutres;
+            lbl.style.borderLeftColor = fc;
+            container.appendChild(cb);
+            container.appendChild(lbl);
+        });
+    }
+    updateDashboard();
+}
+
+function applyFilter() {
+    const reg = document.getElementById('regionFilter').value;
+    const fac = document.getElementById('factionFilter').value;
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        const lbl = cb.nextElementSibling;
+        const match = (reg==='all'||cb.dataset.region===reg) && (fac==='all'||cb.dataset.faction===fac);
+        lbl.style.display = match ? 'inline-block' : 'none';
+        if(!match) cb.checked = false;
+    });
+    updateDashboard();
+}
+
+function updateDashboard() {
+    const selected = Array.from(document.querySelectorAll('input:checked')).map(cb=>cb.value);
+    const ctx = document.getElementById('radar').getContext('2d');
+    if(chartInst) chartInst.destroy();
+
+    if(selected.length > 0) {
+        chartInst = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels,
+                datasets: selected.map(nom => {
+                    const h = flatHouses[nom];
+                    const c = h.couleur;
+                    return {
+                        label: nom,
+                        data: labels.map(k => h.stats[k]),
+                        backgroundColor: c.replace(/[\d.]+\)$/, '0.15)'),
+                        borderColor:     c.replace(/[\d.]+\)$/, '1)'),
+                        borderWidth: 2,
+                        pointBackgroundColor: c.replace(/[\d.]+\)$/, '1)'),
+                        pointRadius: 4
+                    };
+                })
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: '#ddd' },
+                        grid: { color: '#e8e4d8' },
+                        pointLabels: { color: '#5a4020', font: { family:'Cinzel', size:11 } },
+                        ticks: { display: false },
+                        suggestedMin: 0, suggestedMax: 10
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color:'#8b6c28', font:{ family:'Cinzel', size:11 } } }
+                }
+            }
+        });
+    }
+
+    const cardCont = document.getElementById('cardContainer');
+    cardCont.innerHTML = '';
+    if(selected.length === 0) {
+        cardCont.innerHTML = '<div class="empty-msg">Sélectionnez une ou plusieurs maisons ci-dessus.</div>';
+        return;
+    }
+    selected.forEach(nom => {
+        const h = flatHouses[nom];
+        const total  = Object.values(h.stats).reduce((a,b)=>a+b,0);
+        const sorted = Object.entries(h.stats).sort((a,b)=>b[1]-a[1]);
+        const top3   = sorted.slice(0,3);
+        const colorSolid = h.couleur.replace(/[\d.]+\)$/,'1)');
+        const fac = h.faction || 'Neutres';
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.borderLeftColor = colorSolid;
+        div.innerHTML = `
+            <h3>
+                ${h.nom}
+                <span class="faction-badge fb-${fac}">${fac}</span>
+            </h3>
+            <p>${h.desc}</p>
+            <div style="font-size:0.75rem;color:#999;margin-bottom:8px;">
+                Région : <strong style="color:#8b6c28">${h.region}</strong>
+                &nbsp;|&nbsp; Score : <strong style="color:#333">${total}/90</strong>
+            </div>
+            <div class="stats-mini">
+                <div style="font-size:0.68rem;text-transform:uppercase;color:#aaa;margin-bottom:6px;font-weight:700;letter-spacing:0.5px;">Points forts</div>
+                ${top3.map(([k,v])=>`<div class="s-row"><span>${k}</span><span style="color:${colorSolid};font-weight:700">${v}/10</span></div>`).join('')}
+            </div>`;
+        cardCont.appendChild(div);
+    });
+}
+
+function switchTab(tabName) {
+    document.querySelectorAll('.view-section').forEach(el=>el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+    document.getElementById('view-'+tabName).classList.add('active');
+    document.getElementById('btn-tab-'+tabName).classList.add('active');
+    if(tabName==='regions')  generateRegionalDashboard();
+    if(tabName==='factions') generateFactionDashboard();
+    if(tabName==='edit') { renderCohesionEdit(); renderHouseEdit(); }
+    if(tabName==='echelles') { renderScalesTab(); }
+}
+
+// ================================================================
+// ONGLET RÉGIONS — FICHES COMPARATIVES
+// ================================================================
+
+var selectedRegions = [];
+var RADAR_LABELS_REG = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+
+var REGION_COLORS = {
+    "Nord":                  "#6b8fa8",
+    "Îles de Fer":           "#2a5a2a",
+    "Conflans":              "#8c3a3a",
+    "Val d'Arryn":           "#7a7ab8",
+    "Terres de la Couronne": "#b87020",
+    "Terres de l'Ouest":     "#c8a84b",
+    "Terres de l'Orage":     "#5a8a5a",
+    "Bief":                  "#3a8a3a",
+    "Dorne":                 "#c87840",
+    "Peyredragon":           "#4040a0",
+    "Degrés de Pierre":      "#804020"
+};
+
+function getRegionColor(reg) { return REGION_COLORS[reg] || "#8b6c28"; }
+function cohesionColor2(pct) {
+    if (pct >= 80) return "#2e6b1f";
+    if (pct >= 65) return "#8b6c28";
+    if (pct >= 45) return "#cc6600";
+    return "#8b0000";
+}
+
+function generateRegionalDashboard() {
+    renderRegionMiniCards();
+}
+
+function getRegionRadarData(reg) {
+    var houses = editData.houses[reg] || housesData[reg] || [];
+    if (!houses.length) return RADAR_LABELS_REG.map(function() { return 0; });
+    return RADAR_LABELS_REG.map(function(stat) {
+        var sum = 0;
+        houses.forEach(function(h) { sum += (h.stats[stat] || 0); });
+        return parseFloat((sum / houses.length).toFixed(1));
+    });
+}
+
+function renderRegionMiniCards() {
+    var grid = document.getElementById('regionCardGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    Object.keys(housesData).forEach(function(reg) {
+        var houses = editData.houses[reg] || housesData[reg] || [];
+        if (!houses.length) return;
+        var info = regionDetails[reg] || { cohesionPct: 0, statCohesion: '?' };
+        var color = getRegionColor(reg);
+        var cPct  = info.cohesionPct || 0;
+        var cColor = cohesionColor2(cPct);
+        var isSelected = selectedRegions.indexOf(reg) >= 0;
+        var milTer = 0, milNav = 0, eco = 0;
+        houses.forEach(function(h) {
+            milTer += (h.stats['Mil. Terrestre'] || 0);
+            milNav += (h.stats['Mil. Naval'] || 0);
+            eco    += ((h.stats['Terres'] || 0) + (h.stats['Commerce'] || 0)) / 2;
+        });
+        milTer /= houses.length; milNav /= houses.length; eco /= houses.length;
+
+        var card = document.createElement('div');
+        card.className = 'region-mini-card' + (isSelected ? ' selected' : '');
+        if (isSelected) card.style.boxShadow = '0 0 0 2px ' + color;
+        card.style.borderTopColor = color;
+        card.onclick = function() { toggleRegion(reg); };
+        card.innerHTML = '<h4 style="color:' + color + '">' + reg + '</h4>'
+            + '<div style="font-size:0.65rem;color:#aaa;margin-bottom:6px;">' + houses.length + ' maisons</div>'
+            + '<div class="region-mini-stat"><span>⚔</span><span style="font-weight:700;color:' + color + '">' + milTer.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (milTer/10*100) + '%;background:' + color + '"></div></div>'
+            + '<div class="region-mini-stat"><span>⚓</span><span style="font-weight:700;color:' + color + '">' + milNav.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (milNav/10*100) + '%;background:' + color + 'aa"></div></div>'
+            + '<div style="margin-top:6px;height:5px;background:var(--border-light);border-radius:3px;overflow:hidden;">'
+            + '<div style="height:100%;width:' + cPct + '%;background:' + cColor + ';border-radius:3px;"></div></div>'
+            + '<div style="font-size:0.62rem;color:' + cColor + ';font-weight:700;text-align:right;margin-top:2px;">' + cPct + '% — ' + (info.statCohesion||'') + '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function toggleRegion(reg) {
+    var idx = selectedRegions.indexOf(reg);
+    if (idx >= 0) {
+        selectedRegions.splice(idx, 1);
+    } else {
+        if (selectedRegions.length >= 3) {
+            alert('Maximum 3 régions comparables simultanément.');
+            return;
+        }
+        selectedRegions.push(reg);
+    }
+    renderRegionMiniCards();
+    renderRegionCompare();
+}
+
+function renderRegionCompare() {
+    var wrap = document.getElementById('regionCompareWrap');
+    if (!wrap) return;
+    if (!selectedRegions.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+    wrap.style.display = 'block';
+
+    var SECTIONS = [
+        { label: 'Cohésion régionale', rows: ['_cohesion'] },
+        { label: 'Forces mobilisables', rows: ['Mil. Terrestre', 'Mil. Naval'] },
+        { label: 'Économie', rows: ['Terres', 'Commerce', 'Population'] },
+        { label: 'Scores régionaux', rows: ['Défensif', 'Influence', 'Diplomatie', 'Cohésion'] },
+        { label: 'Maisons', rows: ['_houses'] }
+    ];
+    var ICONS = { 'Mil. Terrestre':'⚔', 'Mil. Naval':'⚓', 'Terres':'🌾',
+                  'Commerce':'💰', 'Population':'👥', 'Défensif':'🏰',
+                  'Influence':'👑', 'Diplomatie':'🤝', 'Cohésion':'⚜' };
+
+    // Pre-compute stats
+    var allStats = {};
+    selectedRegions.forEach(function(reg) { allStats[reg] = computeRegionStats(reg); });
+
+    // Build table
+    var colCount = selectedRegions.length;
+    var colW = Math.floor(100 / (colCount + 1));
+
+    var nRegCols = selectedRegions.length;
+    var regValW = Math.floor(68 / nRegCols);
+    var html = '<div class="compare-wrap"><table class="compare-table-full">'
+        + '<colgroup><col class="col-label" style="width:32%">';
+    selectedRegions.forEach(function() { html += '<col class="col-val" style="width:' + regValW + '%">'; });
+    html += '</colgroup><thead><tr>'
+        + '<th class="col-label" style="background:var(--panel2);color:var(--gold);">Caractéristique</th>';
+    selectedRegions.forEach(function(reg) {
+        var color = getRegionColor(reg);
+        html += '<th class="val-col"><div class="compare-color-header">'
+            + '<span class="compare-color-dot" style="background:' + color + '"></span>'
+            + '<span style="color:' + color + ';font-size:0.8rem;">' + reg + '</span></div></th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    SECTIONS.forEach(function(sec) {
+        // Section header
+        html += '<tr class="section-row"><td colspan="' + (colCount+1) + '">' + sec.label + '</td></tr>';
+
+        sec.rows.forEach(function(row) {
+            if (row === '_cohesion') {
+                html += '<tr><td>🔗 Cohésion</td>';
+                selectedRegions.forEach(function(reg) {
+                    var info = regionDetails[reg] || {};
+                    var cPct = info.cohesionPct || 0;
+                    var cColor = cohesionColor2(cPct);
+                    html += '<td class="val-col"><div class="coh-inline">'
+                        + '<div class="coh-bar-inline"><div class="coh-bar-inline-fill" style="width:' + cPct + '%;background:' + cColor + '"></div></div>'
+                        + '<span style="color:' + cColor + '">' + cPct + '% — ' + (info.statCohesion||'?') + '</span>'
+                        + '</div></td>';
+                });
+                html += '</tr>';
+            } else if (row === '_houses') {
+                html += '<tr><td>🛡 Maisons</td>';
+                selectedRegions.forEach(function(reg) {
+                    var houses = editData.houses[reg] || housesData[reg] || [];
+                    var factionColors2 = { 'Vert':'#2e6b1f','Rouge':'#8b0000','Noire':'#1a1a3e','Neutres':'#5a5a5a' };
+                    var chips = houses.map(function(h) {
+                        var fc = factionColors2[h.faction] || '#888';
+                        return '<span class="house-chip-sm" style="border-left-color:' + fc + '">' + h.nom + '</span>';
+                    }).join('');
+                    html += '<td class="val-col"><div class="house-chips-cell">' + chips + '</div></td>';
+                });
+                html += '</tr>';
+            } else {
+                html += '<tr><td>' + (ICONS[row]||'') + ' ' + row + '</td>';
+                selectedRegions.forEach(function(reg) {
+                    html += '<td class="val-col">' + (allStats[reg][row] || '—') + '</td>';
+                });
+                html += '</tr>';
+            }
+        });
+    });
+
+    html += '</tbody></table></div>';
+    wrap.innerHTML = html;
+}
+
+// ================================================================
+// ONGLET FACTIONS — FICHES COMPARATIVES
+// ================================================================
+
+var selectedFactions = [];
+var FACTION_DEFS = {
+    "Vert":    { label: "Faction Verte",  color: "#2e6b1f" },
+    "Rouge":   { label: "Faction Rouge",  color: "#8b0000" },
+    "Noire":   { label: "Faction Noire",  color: "#1a1a3e" },
+    "Neutres": { label: "Neutres",        color: "#5a5a5a" }
+};
+
+function generateFactionDashboard() {
+    // Pre-select Noire, Rouge, Vert by default on first open
+    if (selectedFactions.length === 0) {
+        ['Noire', 'Rouge', 'Vert'].forEach(function(f) {
+            if (getFactionHouses(f).length > 0) selectedFactions.push(f);
+        });
+    }
+    renderFactionMiniCards();
+    renderFactionCompare();
+}
+
+function getFactionHouses(faction) {
+    var result = [];
+    for (var reg in housesData) {
+        var houses = editData.houses[reg] || housesData[reg] || [];
+        houses.forEach(function(h) {
+            if ((h.faction || 'Neutres') === faction) result.push(h);
+        });
+    }
+    return result;
+}
+
+function computeFactionStats(faction) {
+    var houses = getFactionHouses(faction);
+    if (!houses.length) return {};
+    var statList = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+    var result = {};
+    statList.forEach(function(stat) {
+        var sd = scalesData[stat];
+        if (!sd) return;
+        if (sd.type === 'quantitative') {
+            var totMin = 0, totMax = 0;
+            houses.forEach(function(h) {
+                var v = getStatValue(stat, h.stats[stat] || 1);
+                totMin += v.min || 0; totMax += v.max || 0;
+            });
+            result[stat] = fmtNum(totMin, sd.unit) + ' – ' + fmtNum(totMax, sd.unit) + ' ' + sd.unit;
+        } else if (sd.type === 'score') {
+            var totScore = 0;
+            houses.forEach(function(h) {
+                var v = getStatValue(stat, h.stats[stat] || 1);
+                totScore += v.weight || 0;
+            });
+            result[stat] = Math.round(totScore) + ' pts';
+        }
+    });
+    return result;
+}
+
+function renderFactionMiniCards() {
+    var grid = document.getElementById('factionCardGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    Object.entries(FACTION_DEFS).forEach(function(entry) {
+        var key = entry[0], def = entry[1];
+        var houses = getFactionHouses(key);
+        if (!houses.length) return;
+        var color = def.color;
+        var isSelected = selectedFactions.indexOf(key) >= 0;
+        var milTer = 0, milNav = 0, eco = 0;
+        houses.forEach(function(h) {
+            milTer += (h.stats['Mil. Terrestre'] || 0);
+            milNav += (h.stats['Mil. Naval'] || 0);
+            eco    += ((h.stats['Terres'] || 0) + (h.stats['Commerce'] || 0)) / 2;
+        });
+        milTer /= houses.length; milNav /= houses.length; eco /= houses.length;
+
+        var card = document.createElement('div');
+        card.className = 'faction-mini-card' + (isSelected ? ' selected' : '');
+        if (isSelected) card.style.boxShadow = '0 0 0 2px ' + color;
+        card.style.borderTopColor = color;
+        card.onclick = function() { toggleFaction(key); };
+        card.innerHTML = '<h4 style="color:' + color + '">' + def.label + '</h4>'
+            + '<div style="font-size:0.65rem;color:#aaa;margin-bottom:8px;">' + houses.length + ' maisons</div>'
+            + '<div class="region-mini-stat"><span>⚔ Mil. Ter. moy.</span><span style="font-weight:700;">' + milTer.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (milTer/10*100) + '%;background:' + color + '"></div></div>'
+            + '<div class="region-mini-stat"><span>⚓ Naval moy.</span><span style="font-weight:700;">' + milNav.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (milNav/10*100) + '%;background:' + color + 'aa"></div></div>'
+            + '<div class="region-mini-stat"><span>💰 Éco. moy.</span><span style="font-weight:700;">' + eco.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (eco/10*100) + '%;background:#c8a84b88"></div></div>';
+        grid.appendChild(card);
+    });
+}
+
+function toggleFaction(key) {
+    var idx = selectedFactions.indexOf(key);
+    if (idx >= 0) {
+        selectedFactions.splice(idx, 1);
+    } else {
+        if (selectedFactions.length >= 3) {
+            // Replace oldest selection instead of blocking
+            selectedFactions.shift();
+        }
+        selectedFactions.push(key);
+    }
+    renderFactionMiniCards();
+    renderFactionCompare();
+}
+
+function renderFactionCompare() {
+    var wrap = document.getElementById('factionCompareWrap');
+    if (!wrap) return;
+    if (!selectedFactions.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+    wrap.style.display = 'block';
+    wrap.style.overflowX = 'auto';
+
+    var SECTIONS = [
+        { label: 'Forces mobilisables', rows: ['Mil. Terrestre', 'Mil. Naval'] },
+        { label: 'Économie', rows: ['Terres', 'Commerce', 'Population'] },
+        { label: 'Scores', rows: ['Défensif', 'Influence', 'Diplomatie', 'Cohésion'] },
+        { label: 'Maisons affiliées', rows: ['_houses'] }
+    ];
+    var ICONS = { 'Mil. Terrestre':'⚔', 'Mil. Naval':'⚓', 'Terres':'🌾',
+                  'Commerce':'💰', 'Population':'👥', 'Défensif':'🏰',
+                  'Influence':'👑', 'Diplomatie':'🤝', 'Cohésion':'⚜' };
+    var factionColors2 = { 'Vert':'#2e6b1f','Rouge':'#8b0000','Noire':'#1a1a3e','Neutres':'#5a5a5a' };
+
+    var allStats = {};
+    selectedFactions.forEach(function(key) { allStats[key] = computeFactionStats(key); });
+
+    var nCols = selectedFactions.length;
+    var valW = Math.floor(68 / nCols);
+    var html = '<div class="compare-wrap"><table class="compare-table-full">'
+        + '<colgroup><col class="col-label" style="width:32%">';
+    selectedFactions.forEach(function() { html += '<col class="col-val" style="width:' + valW + '%">'; });
+    html += '</colgroup><thead><tr>'
+        + '<th class="col-label" style="background:var(--panel2);color:var(--gold);">Caractéristique</th>';
+    selectedFactions.forEach(function(key) {
+        var color = FACTION_DEFS[key].color;
+        html += '<th class="val-col"><div class="compare-color-header">'
+            + '<span class="compare-color-dot" style="background:' + color + '"></span>'
+            + '<span style="color:' + color + ';font-size:0.8rem;">' + FACTION_DEFS[key].label + '</span></div></th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    SECTIONS.forEach(function(sec) {
+        html += '<tr class="section-row"><td colspan="' + (selectedFactions.length+1) + '">' + sec.label + '</td></tr>';
+        sec.rows.forEach(function(row) {
+            if (row === '_houses') {
+                html += '<tr><td>🛡 Maisons</td>';
+                selectedFactions.forEach(function(key) {
+                    var houses = getFactionHouses(key);
+                    var color = FACTION_DEFS[key].color;
+                    var chips = houses.map(function(h) {
+                        return '<span class="house-chip-sm" style="border-left-color:' + color + '">' + h.nom + '</span>';
+                    }).join('');
+                    html += '<td class="val-col"><div class="house-chips-cell">' + chips + '</div></td>';
+                });
+                html += '</tr>';
+            } else {
+                html += '<tr><td>' + (ICONS[row]||'') + ' ' + row + '</td>';
+                selectedFactions.forEach(function(key) {
+                    html += '<td class="val-col">' + (allStats[key][row] || '—') + '</td>';
+                });
+                html += '</tr>';
+            }
+        });
+    });
+    html += '</tbody></table></div>';
+    wrap.innerHTML = html;
+}
+
+
+var selectedFactions = [];
+var factionRadarChart = null;
+var facViewMode = 'radar';
+
+var FACTION_DEFS = {
+    "Vert":    { label: "Faction Verte",  color: "#2e6b1f" },
+    "Rouge":   { label: "Faction Rouge",  color: "#8b0000" },
+    "Noire":   { label: "Faction Noire",  color: "#1a1a3e" },
+    "Neutres": { label: "Neutres",        color: "#5a5a5a" }
+};
+
+function getFactionHouses(faction) {
+    var result = [];
+    for (var reg in housesData) {
+        var houses = editData.houses[reg] || housesData[reg] || [];
+        houses.forEach(function(h) {
+            if ((h.faction || 'Neutres') === faction) result.push(h);
+        });
+    }
+    return result;
+}
+
+function getFactionRadarData(faction) {
+    var houses = getFactionHouses(faction);
+    if (!houses.length) return RADAR_LABELS_REG.map(function() { return 0; });
+    return RADAR_LABELS_REG.map(function(stat) {
+        var sum = 0;
+        houses.forEach(function(h) { sum += (h.stats[stat] || 0); });
+        return parseFloat((sum / houses.length).toFixed(1));
+    });
+}
+
+function renderFactionMiniCards() {
+    var grid = document.getElementById('factionCardGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    Object.entries(FACTION_DEFS).forEach(function(entry) {
+        var key = entry[0], def = entry[1];
+        var houses = getFactionHouses(key);
+        if (!houses.length) return;
+        var isSelected = selectedFactions.indexOf(key) >= 0;
+        var color = def.color;
+
+        var milTer = 0, milNav = 0, eco = 0;
+        houses.forEach(function(h) {
+            milTer += (h.stats['Mil. Terrestre'] || 0);
+            milNav += (h.stats['Mil. Naval'] || 0);
+            eco    += ((h.stats['Terres'] || 0) + (h.stats['Commerce'] || 0)) / 2;
+        });
+        milTer /= houses.length;
+        milNav /= houses.length;
+        eco    /= houses.length;
+
+        var card = document.createElement('div');
+        card.className = 'faction-mini-card' + (isSelected ? ' selected' : '');
+        card.style.borderTopColor = color;
+        card.style.color = color;
+        card.onclick = function() { toggleFaction(key); };
+
+        card.innerHTML = '<h4 style="color:' + color + '">' + def.label + '</h4>'
+            + '<div style="font-size:0.65rem;color:#aaa;margin-bottom:8px;">' + houses.length + ' maisons</div>'
+            + '<div class="region-mini-stat"><span>⚔ Mil. Ter. moy.</span><span style="font-weight:700;">' + milTer.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (milTer/10*100) + '%;background:' + color + '"></div></div>'
+            + '<div class="region-mini-stat"><span>⚓ Naval moy.</span><span style="font-weight:700;">' + milNav.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (milNav/10*100) + '%;background:' + color + 'aa"></div></div>'
+            + '<div class="region-mini-stat"><span>💰 Éco. moy.</span><span style="font-weight:700;">' + eco.toFixed(1) + '</span></div>'
+            + '<div class="region-mini-bar-bg"><div class="region-mini-bar" style="width:' + (eco/10*100) + '%;background:#c8a84b88"></div></div>';
+        grid.appendChild(card);
+    });
+}
+
+function toggleFaction(key) {
+    var idx = selectedFactions.indexOf(key);
+    if (idx >= 0) selectedFactions.splice(idx, 1);
+    else selectedFactions.push(key);
+    renderFactionMiniCards();
+    renderFactionRadar();
+    renderFactionDetails();
+}
+
+function setFacView(mode, btn) {
+    facViewMode = mode;
+    document.querySelectorAll('#factionViewToggle .view-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('factionRadarDiv').style.display  = mode === 'radar' ? 'block' : 'none';
+    document.getElementById('factionTableDiv').style.display  = mode === 'table' ? 'block' : 'none';
+    if (mode === 'table') renderFactionTable();
+}
+
+function renderFactionRadar() {
+    var wrap = document.getElementById('factionRadarWrap');
+    if (!wrap) return;
+    if (selectedFactions.length === 0) {
+        wrap.style.display = 'none';
+        if (factionRadarChart) { factionRadarChart.destroy(); factionRadarChart = null; }
+        return;
+    }
+    wrap.style.display = 'block';
+    if (factionRadarChart) factionRadarChart.destroy();
+
+    var datasets = selectedFactions.map(function(key) {
+        var color = FACTION_DEFS[key].color;
+        return {
+            label: FACTION_DEFS[key].label,
+            data: getFactionRadarData(key),
+            borderColor: color,
+            backgroundColor: color + '1a',
+            borderWidth: 2,
+            pointBackgroundColor: color,
+            pointRadius: 4
+        };
+    });
+
+    factionRadarChart = new Chart(
+        document.getElementById('factionRadar').getContext('2d'),
+        {
+            type: 'radar',
+            data: { labels: RADAR_LABELS_REG, datasets: datasets },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { r: {
+                    angleLines: { color: '#ddd' }, grid: { color: '#e8e4d8' },
+                    pointLabels: { color: '#5a4020', font: { family: 'Cinzel', size: 11 } },
+                    ticks: { display: false }, suggestedMin: 0, suggestedMax: 10
+                }},
+                plugins: { legend: { labels: { color: '#8b6c28', font: { family: 'Cinzel', size: 11 } } } }
+            }
+        }
+    );
+
+    var leg = document.getElementById('factionRadarLegend');
+    leg.innerHTML = selectedFactions.map(function(key) {
+        var color = FACTION_DEFS[key].color;
+        return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;color:#555;">'
+            + '<span style="width:12px;height:12px;border-radius:2px;background:' + color + ';flex-shrink:0;"></span>'
+            + FACTION_DEFS[key].label + '</span>';
+    }).join('');
+
+    if (facViewMode === 'table') renderFactionTable();
+}
+
+function computeFactionStats(faction) {
+    var houses = getFactionHouses(faction);
+    if (!houses.length) return {};
+    var statList = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+    var result = {};
+    statList.forEach(function(stat) {
+        var sd = scalesData[stat];
+        if (!sd) return;
+        if (sd.type === 'quantitative') {
+            var totMin = 0, totMax = 0;
+            houses.forEach(function(h) {
+                var v = getStatValue(stat, h.stats[stat] || 1);
+                totMin += v.min || 0; totMax += v.max || 0;
+            });
+            result[stat] = fmtNum(totMin, sd.unit) + ' – ' + fmtNum(totMax, sd.unit) + ' ' + sd.unit;
+        } else if (sd.type === 'score') {
+            var totScore = 0;
+            houses.forEach(function(h) {
+                var v = getStatValue(stat, h.stats[stat] || 1);
+                totScore += v.weight || 0;
+            });
+            result[stat] = Math.round(totScore) + ' pts';
+        }
+    });
+    return result;
+}
+
+function renderFactionTable() {
+    var div = document.getElementById('factionTableDiv');
+    if (!div || !selectedFactions.length) return;
+    var statList = ["Mil. Terrestre","Mil. Naval","Terres","Commerce","Population","Défensif","Influence","Diplomatie","Cohésion"];
+    var statIcons = {"Mil. Terrestre":"⚔","Mil. Naval":"⚓","Terres":"🌾","Commerce":"💰","Population":"👥","Défensif":"🏰","Influence":"👑","Diplomatie":"🤝","Cohésion":"⚜"};
+
+    var html = '<table class="compare-table"><thead><tr><th>Caractéristique</th>';
+    selectedFactions.forEach(function(key) {
+        var color = FACTION_DEFS[key].color;
+        html += '<th class="stat-col"><span class="color-chip" style="background:' + color + '"></span>' + FACTION_DEFS[key].label + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    statList.forEach(function(stat) {
+        html += '<tr><td>' + (statIcons[stat]||'') + ' ' + stat + '</td>';
+        selectedFactions.forEach(function(key) {
+            var stats = computeFactionStats(key);
+            html += '<td class="stat-col">' + (stats[stat] || '—') + '</td>';
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    div.innerHTML = html;
+}
+
+function renderFactionDetails() {
+    var grid = document.getElementById('factionDetailGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    if (!selectedFactions.length) return;
+
+    selectedFactions.forEach(function(key) {
+        var def    = FACTION_DEFS[key];
+        var houses = getFactionHouses(key);
+        var stats  = computeFactionStats(key);
+        var color  = def.color;
+
+        var chips = houses.map(function(h) {
+            return '<span class="region-house-chip" style="border-left-color:' + color + '">' + h.nom + '</span>';
+        }).join('');
+
+        var card = document.createElement('div');
+        card.className = 'region-detail-card';
+        card.style.borderTop = '4px solid ' + color;
+
+        card.innerHTML = '<h3><span style="color:' + color + '">' + def.label + '</span>'
+            + '<span style="font-size:0.7rem;color:#aaa;font-family:Lato;font-weight:400;">' + houses.length + ' maisons</span></h3>'
+            + '<div class="detail-section-lbl">Forces mobilisables</div>'
+            + '<div class="detail-row"><span class="detail-lbl">⚔ Mil. Terrestre</span><span class="detail-val">' + (stats['Mil. Terrestre']||'—') + '</span></div>'
+            + '<div class="detail-row"><span class="detail-lbl">⚓ Mil. Naval</span><span class="detail-val">' + (stats['Mil. Naval']||'—') + '</span></div>'
+            + '<div class="detail-section-lbl">Économie</div>'
+            + '<div class="detail-row"><span class="detail-lbl">🌾 Terres</span><span class="detail-val">' + (stats['Terres']||'—') + '</span></div>'
+            + '<div class="detail-row"><span class="detail-lbl">💰 Commerce</span><span class="detail-val">' + (stats['Commerce']||'—') + '</span></div>'
+            + '<div class="detail-row"><span class="detail-lbl">👥 Population</span><span class="detail-val">' + (stats['Population']||'—') + '</span></div>'
+            + '<div class="detail-section-lbl">Scores</div>'
+            + '<div class="detail-row"><span class="detail-lbl">🏰 Défensif</span><span class="detail-val">' + (stats['Défensif']||'—') + '</span></div>'
+            + '<div class="detail-row"><span class="detail-lbl">👑 Influence</span><span class="detail-val">' + (stats['Influence']||'—') + '</span></div>'
+            + '<div class="detail-row"><span class="detail-lbl">🤝 Diplomatie</span><span class="detail-val">' + (stats['Diplomatie']||'—') + '</span></div>'
+            + '<div class="detail-row"><span class="detail-lbl">⚜ Cohésion int.</span><span class="detail-val">' + (stats['Cohésion']||'—') + '</span></div>'
+            + '<div class="detail-section-lbl">Maisons affiliées</div>'
+            + '<div class="region-house-list">' + chips + '</div>';
+        grid.appendChild(card);
+    });
+}
+
+
+
+// ================================================================
+// MODE ÉDITION
+// ================================================================
+
+// Données de travail (copiées au démarrage, modifiées en live)
+let editData = { houses: {}, regions: {} };
+
+function initEditData() {
+    // Deep copy des données
+    for(const [reg, houses] of Object.entries(housesData)) {
+        editData.houses[reg] = houses.map(h => ({
+            ...h,
+            stats: { ...h.stats },
+            region: reg
+        }));
+    }
+    for(const [reg, info] of Object.entries(regionDetails)) {
+        editData.regions[reg] = { ...info };
+    }
+}
+
+function renderCohesionEdit() {
+    const grid = document.getElementById('cohesionEditGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    const statOptions = ['Fragmentée','Tendue','Stable','Soudée','Unie'];
+
+    for(const [reg, info] of Object.entries(editData.regions)) {
+        const card = document.createElement('div');
+        card.className = 'cohesion-edit-card';
+        const cColor = cohesionColor(info.cohesionPct||0);
+        card.innerHTML = `
+            <label>${reg}</label>
+            <div class="cohesion-row">
+                <span>Cohésion</span>
+                <input type="range" min="0" max="100" step="1"
+                    value="${info.cohesionPct||0}"
+                    oninput="updateCohesionPct('${reg}', this.value, this)"
+                    style="flex:1">
+                <span class="pct-val" id="cpct_${reg.replace(/[^a-zA-Z0-9]/g,'_')}" style="color:${cColor}">${info.cohesionPct||0}%</span>
+            </div>
+            <div class="cohesion-row">
+                <span>Statut</span>
+                <select onchange="updateCohesionStat('${reg}', this.value)">
+                    ${statOptions.map(s=>`<option value="${s}" ${s===info.statCohesion?'selected':''}>${s}</option>`).join('')}
+                </select>
+            </div>
+            <div class="cohesion-row" style="margin-top:4px">
+                <span style="font-size:0.7rem;color:#aaa">Terrestres</span>
+                <input type="text" value="${info.forcesTerrestres||''}"
+                    oninput="editData.regions['${reg}'].forcesTerrestres=this.value"
+                    style="flex:1;padding:3px 6px;border:1px solid var(--border);border-radius:3px;font-size:0.75rem;">
+            </div>
+            <div class="cohesion-row">
+                <span style="font-size:0.7rem;color:#aaa">Navales</span>
+                <input type="text" value="${info.forcesNavales||''}"
+                    oninput="editData.regions['${reg}'].forcesNavales=this.value"
+                    style="flex:1;padding:3px 6px;border:1px solid var(--border);border-radius:3px;font-size:0.75rem;">
+            </div>`;
+        grid.appendChild(card);
+    }
+}
+
+function updateCohesionPct(reg, val, slider) {
+    editData.regions[reg].cohesionPct = parseInt(val);
+    const id = 'cpct_' + reg.replace(/[^a-zA-Z0-9]/g,'_');
+    const el = document.getElementById(id);
+    if(el) {
+        el.textContent = val + '%';
+        el.style.color = cohesionColor(parseInt(val));
+    }
+}
+
+function updateCohesionStat(reg, val) {
+    editData.regions[reg].statCohesion = val;
+}
+
+function renderHouseEdit() {
+    const grid = document.getElementById('houseEditGrid');
+    const filterReg = document.getElementById('editRegionFilter');
+    if(!grid) return;
+    grid.innerHTML = '';
+
+    const selReg = filterReg ? filterReg.value : 'all';
+    const statLabels = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+    const factions = ['Vert','Rouge','Noire','Neutres'];
+    const factionColors2 = { 'Vert':'#2e6b1f','Rouge':'#8b0000','Noire':'#1a1a3e','Neutres':'#5a5a5a' };
+
+    for(const [reg, houses] of Object.entries(editData.houses)) {
+        if(selReg !== 'all' && reg !== selReg) continue;
+        houses.forEach((h, idx) => {
+            const card = document.createElement('div');
+            card.className = 'house-edit-card';
+            const fc = factionColors2[h.faction]||'#888';
+            card.style.borderLeftColor = fc;
+
+            const statRows = statLabels.map(stat => {
+                const val = h.stats[stat]||5;
+                const safeId = `${reg}_${h.nom}_${stat}`.replace(/[^a-zA-Z0-9]/g,'_');
+                return `<div class="stat-edit-row">
+                    <label>${stat}</label>
+                    <input type="range" min="1" max="10" step="1" value="${val}"
+                        oninput="updateHouseStat('${reg}',${idx},'${stat}',this.value,this)"
+                        style="flex:1">
+                    <span class="stat-val" id="sv_${safeId}">${val}</span>
+                </div>`;
+            }).join('');
+
+            card.innerHTML = `
+                <h4>
+                    ${h.nom}
+                    <select onchange="updateHouseFaction('${reg}',${idx},this.value,this.parentElement.parentElement)"
+                        style="border-color:${fc}">
+                        ${factions.map(f=>`<option value="${f}" ${f===h.faction?'selected':''}>${f}</option>`).join('')}
+                    </select>
+                </h4>
+                <div style="font-size:0.7rem;color:#aaa;margin-bottom:8px;">${reg}</div>
+                ${statRows}`;
+            grid.appendChild(card);
+        });
+    }
+}
+
+function updateHouseStat(reg, idx, stat, val, slider) {
+    editData.houses[reg][idx].stats[stat] = parseInt(val);
+    const safeId = `${reg}_${editData.houses[reg][idx].nom}_${stat}`.replace(/[^a-zA-Z0-9]/g,'_');
+    const el = document.getElementById('sv_' + safeId);
+    if(el) el.textContent = val;
+}
+
+function updateHouseFaction(reg, idx, val, card) {
+    editData.houses[reg][idx].faction = val;
+    const factionColors2 = { 'Vert':'#2e6b1f','Rouge':'#8b0000','Noire':'#1a1a3e','Neutres':'#5a5a5a' };
+    const fc = factionColors2[val]||'#888';
+    card.style.borderLeftColor = fc;
+    const sel = card.querySelector('select');
+    if(sel) sel.style.borderColor = fc;
+}
+
+function buildEditRegionFilter() {
+    const sel = document.getElementById('editRegionFilter');
+    if(!sel) return;
+    Object.keys(housesData).forEach(reg => {
+        const opt = document.createElement('option');
+        opt.value = reg; opt.innerText = reg;
+        sel.appendChild(opt);
+    });
+}
+
+function escStr(s) {
+    return String(s)
+        .replace(/\\/g, '\\\\')
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '');
+}
+
+function exportHTML() {
+    var newHousesData = 'const housesData = {\n';
+    var regions = Object.keys(editData.houses);
+    for (var ri = 0; ri < regions.length; ri++) {
+        var reg = regions[ri];
+        var houses = editData.houses[reg];
+        newHousesData += '\n  "' + escStr(reg) + '": [\n';
+        for (var hi = 0; hi < houses.length; hi++) {
+            var h = houses[hi];
+            var statKeys = Object.keys(h.stats);
+            var statParts = [];
+            for (var si = 0; si < statKeys.length; si++) {
+                statParts.push('"' + escStr(statKeys[si]) + '":' + parseInt(h.stats[statKeys[si]]));
+            }
+            newHousesData += '    { nom:"' + escStr(h.nom) + '", faction:"' + escStr(h.faction) + '", couleur:"' + escStr(h.couleur) + '",\n';
+            newHousesData += '      stats:{' + statParts.join(', ') + '},\n';
+            newHousesData += '      desc:"' + escStr(h.desc) + '" }';
+            newHousesData += hi < houses.length - 1 ? ',\n' : '\n';
+        }
+        newHousesData += '  ],\n';
+    }
+    newHousesData += '\n};';
+
+    var newRegionDetails = 'const regionDetails = {\n';
+    var regs = Object.keys(editData.regions);
+    for (var ri2 = 0; ri2 < regs.length; ri2++) {
+        var r = regs[ri2];
+        var info = editData.regions[r];
+        newRegionDetails += '    "' + escStr(r) + '": { '
+            + 'cohesionPct:' + parseInt(info.cohesionPct || 0) + ', '
+            + 'statCohesion:"' + escStr(info.statCohesion || '') + '", '
+            + 'forcesTerrestres:"' + escStr(info.forcesTerrestres || '') + '", '
+            + 'forcesNavales:"' + escStr(info.forcesNavales || '') + '" },\n';
+    }
+    newRegionDetails += '};';
+
+    var html = document.documentElement.outerHTML;
+    var oldRegStart    = html.indexOf('const regionDetails = {');
+    var oldRegEnd      = html.indexOf('\n};', oldRegStart) + 3;
+    var oldHousesStart = html.indexOf('const housesData = {');
+    var oldHousesEnd   = html.indexOf('\n};', oldHousesStart) + 3;
+
+    if (oldRegStart < 0 || oldHousesStart < 0) {
+        alert('Erreur : impossible de localiser les blocs de données.');
+        return;
+    }
+
+    // Reconstruit scalesData
+    var newScalesData = 'var scalesData = ' + JSON.stringify(scalesData, null, 4) + ';';
+
+    var oldScalesStart = html.indexOf('var scalesData = {');
+    var oldScalesEnd   = html.indexOf('\n};', oldScalesStart) + 3;
+
+    var newHtml;
+    if (oldScalesStart >= 0) {
+        newHtml = html.substring(0, oldRegStart)
+            + newRegionDetails
+            + html.substring(oldRegEnd, oldHousesStart)
+            + newHousesData
+            + html.substring(oldHousesEnd, oldScalesStart)
+            + newScalesData
+            + html.substring(oldScalesEnd);
+    } else {
+        newHtml = html.substring(0, oldRegStart)
+            + newRegionDetails
+            + html.substring(oldRegEnd, oldHousesStart)
+            + newHousesData
+            + html.substring(oldHousesEnd);
+    }
+
+    var blob = new Blob([newHtml], { type: 'text/html;charset=utf-8' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'COFAS_updated.html';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    var badge = document.getElementById('savedBadge');
+    if (badge) {
+        badge.style.display = 'inline-block';
+        setTimeout(function() { badge.style.display = 'none'; }, 3000);
+    }
+}
+
+function initEdit() {
+    initEditData();
+    buildEditRegionFilter();
+}
+
+
+// ================================================================
+// DONNÉES DES ÉCHELLES — MODIFIER DANS L'ONGLET ÉCHELLES
+// ================================================================
+var scalesData = {
+    // ================================================================
+    // ÉCHELLES — MODIFIER ICI LES FOURCHETTES PAR NIVEAU
+    // levels : [min, max] — utiliser 999999 pour représenter l'infini
+    // weights : poids de calcul non-linéaire pour les scores régionaux
+    // ================================================================
+
+    "Mil. Terrestre": {
+        type: "quantitative", unit: "hommes",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        levels: [
+            [500,    1000],
+            [1000,   2000],
+            [2000,   3500],
+            [3500,   5000],
+            [5000,   7000],
+            [7000,   10000],
+            [10000,  15000],
+            [15000,  22000],
+            [22000,  30000],
+            [30000,  999999]
+        ]
+    },
+
+    "Mil. Naval": {
+        type: "quantitative", unit: "navires",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        levels: [
+            [3,   8],
+            [8,   15],
+            [15,  25],
+            [25,  40],
+            [40,  55],
+            [55,  80],
+            [80,  120],
+            [120, 160],
+            [160, 200],
+            [200, 999999]
+        ]
+    },
+
+    "Terres": {
+        type: "quantitative", unit: "dr.or/an",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        levels: [
+            [100,    500],
+            [500,    1500],
+            [1500,   3000],
+            [3000,   6000],
+            [6000,   10000],
+            [10000,  18000],
+            [18000,  30000],
+            [30000,  50000],
+            [50000,  80000],
+            [80000,  999999]
+        ]
+    },
+
+    "Commerce": {
+        type: "quantitative", unit: "dr.or/an",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        levels: [
+            [0,      200],
+            [200,    800],
+            [800,    2000],
+            [2000,   5000],
+            [5000,   10000],
+            [10000,  20000],
+            [20000,  40000],
+            [40000,  80000],
+            [80000,  150000],
+            [150000, 999999]
+        ]
+    },
+
+    "Population": {
+        type: "quantitative", unit: "millions hab.",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        levels: [
+            [0.001, 0.005],
+            [0.005, 0.015],
+            [0.015, 0.03],
+            [0.03,  0.06],
+            [0.06,  0.12],
+            [0.12,  0.25],
+            [0.25,  0.5],
+            [0.5,   1.0],
+            [1.0,   2.0],
+            [2.0,   999999]
+        ]
+    },
+
+    "Influence": {
+        type: "score", unit: "pts influence",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        descriptions: [
+            "Aucune influence hors de son fief",
+            "Influence marginale",
+            "Connue localement",
+            "Quelque poids régional",
+            "Vassal avec voix au chapitre",
+            "Influence régionale affirmée",
+            "Acteur politique régional majeur",
+            "Influence continentale notable",
+            "Poids décisif dans les grandes décisions",
+            "Influence absolue — maîtrise du jeu politique"
+        ]
+    },
+
+    "Diplomatie": {
+        type: "score", unit: "pts diplomatie",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        descriptions: [
+            "Aucun réseau diplomatique",
+            "Relations purement locales",
+            "Quelques contacts régionaux",
+            "Diplomatie modeste",
+            "Réseau d'alliances standard",
+            "Diplomates actifs, alliances solides",
+            "Réseau inter-régional développé",
+            "Présence diplomatique continentale",
+            "Maîtrise des alliances à grande échelle",
+            "Diplomatie légendaire — toile continentale"
+        ]
+    },
+
+    "Cohésion": {
+        type: "score", unit: "pts cohésion",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        descriptions: [
+            "Maison au bord de l'éclatement",
+            "Tensions internes sévères",
+            "Instabilité notable",
+            "Cohésion fragile",
+            "Stabilité standard",
+            "Maison unie, bonne loyauté interne",
+            "Forte cohésion, réponse rapide",
+            "Loyauté exemplaire, unité totale",
+            "Cohésion quasi-militaire",
+            "Loyauté absolue et légendaire"
+        ]
+    },
+
+    "Défensif": {
+        type: "score", unit: "pts défensif",
+        weights: [1, 2, 3, 5, 8, 12, 18, 26, 38, 55],
+        descriptions: [
+            "Aucune fortification",
+            "Défenses symboliques",
+            "Palissades et tours basiques",
+            "Fortifications modestes",
+            "Château standard",
+            "Défenses solides, garnison efficace",
+            "Forteresse régionale imposante",
+            "Place forte majeure de Westeros",
+            "Quasi-imprenable en conditions normales",
+            "Forteresse légendaire — jamais prise"
+        ]
+    }
+};
+
+// ── CALCUL AUTOMATIQUE DES FORCES ──
+function getStatValue(stat, level) {
+    var sd = scalesData[stat];
+    if (!sd) return { type: 'raw', value: level };
+    var idx = Math.min(Math.max(parseInt(level) || 1, 1), 10) - 1;
+    var weight = sd.weights ? sd.weights[idx] : level;
+
+    if (sd.type === 'quantitative') {
+        var range = sd.levels[idx] || [0, 0];
+        var isMax = range[1] >= 999999;
+        // Pour le calcul : si niveau max, on utilise min * 1.5 comme estimation haute
+        var hi = isMax ? range[0] * 1.5 : range[1];
+        return { type: 'quantitative', min: range[0], max: hi, isMax: isMax, unit: sd.unit, weight: weight };
+    }
+    if (sd.type === 'score') {
+        return { type: 'score', value: weight, unit: sd.unit, weight: weight };
+    }
+    return { type: 'raw', value: level, weight: weight };
+}
+
+function fmtNum(n, unit) {
+    // Retourne uniquement la valeur formatée, SANS l'unité
+    // L'unité est ajoutée une seule fois par l'appelant
+    if (!unit) return Math.round(n).toLocaleString('fr-FR');
+    if (unit.indexOf('millions') >= 0 || unit.indexOf('hab') >= 0) {
+        // Population toujours en millions
+        if (n >= 1)     return n.toFixed(1) + 'M';
+        if (n >= 0.1)   return n.toFixed(2) + 'M';
+        if (n >= 0.01)  return n.toFixed(3) + 'M';
+        return n.toFixed(4) + 'M';
+    }
+    if (unit.indexOf('dr') >= 0) {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000)    return Math.round(n / 1000).toLocaleString('fr-FR') + 'k';
+        return Math.round(n).toString();
+    }
+    if (unit.indexOf('hommes') >= 0 || unit.indexOf('navires') >= 0) {
+        if (n >= 1000) return Math.round(n).toLocaleString('fr-FR');
+        return Math.round(n).toString();
+    }
+    if (n >= 1000) return Math.round(n).toLocaleString('fr-FR');
+    return n % 1 !== 0 ? n.toFixed(2) : Math.round(n).toString();
+}
+
+function computeRegionStats(regionName) {
+    var houses = editData.houses[regionName] || housesData[regionName] || [];
+    if (!houses.length) return {};
+
+    var result = {};
+    var statList = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+
+    statList.forEach(function(stat) {
+        var sd = scalesData[stat];
+        if (!sd) return;
+
+        if (sd.type === 'quantitative') {
+            var totMin = 0, totMax = 0;
+            houses.forEach(function(h) {
+                var v = getStatValue(stat, h.stats[stat] || 1);
+                totMin += v.min || 0;
+                totMax += v.max || 0;
+            });
+            var minStr = fmtNum(totMin, sd.unit);
+            
+            result[stat] = minStr + ' – ' + fmtNum(totMax, sd.unit) + ' ' + sd.unit;
+        } else if (sd.type === 'score') {
+            var totScore = 0;
+            houses.forEach(function(h) {
+                var v = getStatValue(stat, h.stats[stat] || 1);
+                totScore += v.weight || 0;
+            });
+            result[stat] = Math.round(totScore) + ' pts';
+        }
+    });
+    return result;
+}
+
+function computeRegionForces(regionName) {
+    var stats = computeRegionStats(regionName);
+    return {
+        terrestres: stats['Mil. Terrestre'] || '—',
+        navales:    stats['Mil. Naval']     || '—'
+    };
+}
+
+
+// ── RENDU ONGLET ÉCHELLES ──
+function renderScalesTab() {
+    var cont = document.getElementById('scalesContent');
+    if (!cont) return;
+    cont.innerHTML = '';
+
+    // Header info
+    var info = document.createElement('div');
+    info.style.cssText = 'background:#fff8e8;border:1px solid #ddd8cc;border-radius:6px;padding:12px 16px;margin-bottom:20px;font-size:0.82rem;color:#666;';
+    info.innerHTML = '<strong style="color:#8b6c28;">Progression non-linéaire</strong> — Les poids de calcul suivent une courbe géométrique. '
+        + 'Un niveau 10 vaut 55× un niveau 1. Ces poids sont utilisés pour calculer les scores régionaux cumulés.';
+    cont.appendChild(info);
+
+    var statsOrder = ["Mil. Terrestre","Mil. Naval","Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif"];
+
+    // Poids non-linéaires (commun à toutes les caractéristiques)
+    var weightsCard = document.createElement('div');
+    weightsCard.className = 'scale-card';
+    weightsCard.style.gridColumn = '1 / -1';
+    var wRows = '<h3>Poids de calcul par niveau <span style="font-size:0.7rem;font-family:Lato;color:#aaa;">(commun à toutes les caractéristiques)</span></h3>'
+        + '<div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:8px;">';
+    var defaultWeights = [1, 2, 3, 5, 8, 12, 18, 26, 38, 55];
+    for (var i = 0; i < 10; i++) {
+        var w = (scalesData['Mil. Terrestre'].weights || defaultWeights)[i];
+        wRows += '<div style="text-align:center;">'
+            + '<div style="font-size:0.68rem;color:#aaa;margin-bottom:2px;">Niv.' + (i+1) + '</div>'
+            + '<input type="number" min="1" max="9999" value="' + w + '" '
+            + 'style="width:100%;padding:3px;border:1px solid #ddd;border-radius:3px;font-size:0.8rem;text-align:center;" '
+            + 'oninput="updateAllWeights(' + i + ',this.value)">'
+            + '</div>';
+    }
+    wRows += '</div>';
+    weightsCard.innerHTML = wRows;
+
+    var gridTop = document.createElement('div');
+    gridTop.className = 'scales-grid';
+    gridTop.style.gridTemplateColumns = '1fr';
+    gridTop.appendChild(weightsCard);
+    cont.appendChild(gridTop);
+
+    // Quantitative section
+    var h2q = document.createElement('div');
+    h2q.className = 'edit-section-title';
+    h2q.textContent = 'Fourchettes quantitatives (valeurs concrètes par niveau)';
+    cont.appendChild(h2q);
+
+    var gridQ = document.createElement('div');
+    gridQ.className = 'scales-grid';
+
+    ['Mil. Terrestre', 'Mil. Naval', 'Terres', 'Commerce', 'Population'].forEach(function(stat) {
+        var sd = scalesData[stat];
+        var card = document.createElement('div');
+        card.className = 'scale-card';
+        var rows = '<h3>' + stat + ' <span style="font-size:0.68rem;color:#aaa;font-family:Lato">(' + sd.unit + ')</span></h3>'
+            + '<div style="display:grid;grid-template-columns:28px 70px 12px 70px auto;gap:4px;align-items:center;margin-bottom:4px;">'
+            + '<span style="font-size:0.65rem;color:#aaa;">Niv.</span>'
+            + '<span style="font-size:0.65rem;color:#aaa;text-align:center;">Minimum</span>'
+            + '<span></span>'
+            + '<span style="font-size:0.65rem;color:#aaa;text-align:center;">Maximum</span>'
+            + '<span style="font-size:0.65rem;color:#aaa;">' + sd.unit + '</span>'
+            + '</div>';
+        sd.levels.forEach(function(range, i) {
+            var lvl = i + 1;
+            var isInf = range[1] >= 999999;
+            var minVal = range[0];
+            var maxVal = isInf ? '' : range[1];
+            rows += '<div class="scale-row" style="grid-template-columns:28px 70px 12px 70px auto;">'
+                + '<span class="scale-lvl">' + lvl + '</span>'
+                + '<input class="scale-input-sm" type="number" min="0" value="' + minVal + '" placeholder="min"'
+                + ' oninput="scalesData[\'' + stat + '\'].levels[' + i + '][0]=parseInt(this.value)||0">'
+                + '<span class="scale-sep" style="text-align:center;">–</span>'
+                + '<input class="scale-input-sm" type="number" min="0"'
+                + ' value="' + (isInf ? '' : maxVal) + '" placeholder="∞ si vide"'
+                + ' style="color:' + (isInf ? '#c8a84b' : 'inherit') + ';font-weight:' + (isInf ? '700' : '400') + ';"'
+                + ' oninput="var v=parseInt(this.value); if(!v||v<=0) { scalesData[\'' + stat + '\'].levels[' + i + '][1]=999999; this.style.color=\'#c8a84b\'; } else { scalesData[\'' + stat + '\'].levels[' + i + '][1]=v; this.style.color=\'inherit\'; }">'
+                + '<span class="scale-unit" style="font-size:0.65rem;">' + sd.unit + '</span>'
+                + '</div>';
+        });
+        card.innerHTML = rows;
+        gridQ.appendChild(card);
+    });
+    cont.appendChild(gridQ);
+
+    // Score section
+    var h2s = document.createElement('div');
+    h2s.className = 'edit-section-title';
+    h2s.style.marginTop = '24px';
+    h2s.textContent = 'Descriptions qualitatives (Influence, Diplomatie, Cohésion, Défensif)';
+    cont.appendChild(h2s);
+
+    var gridS = document.createElement('div');
+    gridS.className = 'scales-grid';
+
+    ['Influence', 'Diplomatie', 'Cohésion', 'Défensif'].forEach(function(stat) {
+        var sd = scalesData[stat];
+        var card = document.createElement('div');
+        card.className = 'scale-card';
+        var rows = '<h3>' + stat + ' <span style="font-size:0.68rem;color:#aaa;font-family:Lato">(score pondéré)</span></h3>';
+        (sd.descriptions || sd.levels || []).forEach(function(desc, i) {
+            var lvl = i + 1;
+            var w = (sd.weights || defaultWeights)[i];
+            rows += '<div class="scale-row">'
+                + '<span class="scale-lvl">' + lvl + '</span>'
+                + '<span style="font-size:0.68rem;color:#c8a84b;min-width:28px;font-weight:700;">' + w + 'pts</span>'
+                + '<input class="scale-input" type="text" value="' + String(desc).replace(/"/g,'&quot;') + '" '
+                + 'oninput="if(!scalesData[\'' + stat + '\'].descriptions) scalesData[\'' + stat + '\'].descriptions=scalesData[\'' + stat + '\'].levels; scalesData[\'' + stat + '\'].descriptions[' + i + ']=this.value">'
+                + '</div>';
+        });
+        card.innerHTML = rows;
+        gridS.appendChild(card);
+    });
+    cont.appendChild(gridS);
+}
+
+function updateAllWeights(levelIdx, val) {
+    var v = parseInt(val) || 1;
+    var stats = ["Mil. Terrestre","Mil. Naval","Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif"];
+    stats.forEach(function(stat) {
+        if (!scalesData[stat].weights) scalesData[stat].weights = [1,2,3,5,8,12,18,26,38,55];
+        scalesData[stat].weights[levelIdx] = v;
+    });
+}
+
+
+// ── MODAL AJOUT MAISON ──
+function openAddHouseModal(region) {
+    var modal = document.getElementById('addHouseModal');
+    document.getElementById('modalRegion').value = region;
+    document.getElementById('modalNom').value = '';
+    document.getElementById('modalDesc').value = '';
+    document.getElementById('modalFaction').value = 'Neutres';
+    document.getElementById('modalCouleur').value = '#888888';
+    var statInputs = modal.querySelectorAll('.modal-stat-row input[type=range]');
+    statInputs.forEach(function(inp) { inp.value = 5; });
+    modal.querySelectorAll('.sv').forEach(function(s) { s.textContent = '5'; });
+    modal.classList.add('open');
+}
+
+function closeAddHouseModal() {
+    document.getElementById('addHouseModal').classList.remove('open');
+}
+
+function confirmAddHouse() {
+    var region  = document.getElementById('modalRegion').value;
+    var nom     = document.getElementById('modalNom').value.trim();
+    var desc    = document.getElementById('modalDesc').value.trim();
+    var faction = document.getElementById('modalFaction').value;
+    var couleur = document.getElementById('modalCouleur').value;
+
+    if (!nom) { alert('Le nom de la maison est requis.'); return; }
+    if (!editData.houses[region]) { alert('Région introuvable.'); return; }
+
+    var stats = {};
+    var statLabels2 = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+    var modal = document.getElementById('addHouseModal');
+    var rows = modal.querySelectorAll('.modal-stat-row');
+    rows.forEach(function(row, i) {
+        var inp = row.querySelector('input[type=range]');
+        stats[statLabels2[i]] = parseInt(inp.value) || 5;
+    });
+
+    // Convert hex color to rgba
+    var hex = couleur.replace('#','');
+    var r = parseInt(hex.substr(0,2),16);
+    var g = parseInt(hex.substr(2,2),16);
+    var b = parseInt(hex.substr(4,2),16);
+    var couleurRgba = 'rgba(' + r + ',' + g + ',' + b + ',1)';
+
+    var newHouse = { nom: nom, faction: faction, couleur: couleurRgba, stats: stats, desc: desc, region: region };
+    editData.houses[region].push(newHouse);
+
+    // Also add to housesData live
+    if (housesData[region]) housesData[region].push(newHouse);
+
+    closeAddHouseModal();
+    renderHouseEdit();
+    flatHouses[nom] = newHouse;
+    alert('Maison "' + nom + '" ajoutée à ' + region + '. Pensez à exporter le fichier.');
+}
+
+function deleteHouse(region, idx) {
+    var nom = editData.houses[region][idx].nom;
+    if (!confirm('Supprimer "' + nom + '" ?')) return;
+    editData.houses[region].splice(idx, 1);
+    if (housesData[region]) {
+        housesData[region] = housesData[region].filter(function(h) { return h.nom !== nom; });
+    }
+    delete flatHouses[nom];
+    renderHouseEdit();
+}
+
+// ── OVERRIDE renderHouseEdit WITH NAME EDIT + ADD BUTTON ──
+function renderHouseEdit() {
+    var grid = document.getElementById('houseEditGrid');
+    var filterEl = document.getElementById('editRegionFilter');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    var selReg = filterEl ? filterEl.value : 'all';
+    var statLabels2 = ["Terres","Commerce","Population","Influence","Diplomatie","Cohésion","Défensif","Mil. Terrestre","Mil. Naval"];
+    var factions2 = ['Vert','Rouge','Noire','Neutres'];
+    var factionColors3 = { 'Vert':'#2e6b1f','Rouge':'#8b0000','Noire':'#1a1a3e','Neutres':'#5a5a5a' };
+
+    // Add house button(s)
+    var addWrap = document.createElement('div');
+    addWrap.style.marginBottom = '16px';
+    addWrap.style.display = 'flex';
+    addWrap.style.flexWrap = 'wrap';
+    addWrap.style.gap = '8px';
+
+    var regsToShow = selReg === 'all' ? Object.keys(editData.houses) : [selReg];
+    regsToShow.forEach(function(reg) {
+        var btn = document.createElement('button');
+        btn.className = 'add-house-btn';
+        btn.innerHTML = '+ Ajouter une maison à ' + reg;
+        btn.onclick = function() { openAddHouseModal(reg); };
+        addWrap.appendChild(btn);
+    });
+    grid.appendChild(addWrap);
+
+    // House cards
+    for (var ri = 0; ri < Object.keys(editData.houses).length; ri++) {
+        var reg = Object.keys(editData.houses)[ri];
+        if (selReg !== 'all' && reg !== selReg) continue;
+        var houses = editData.houses[reg];
+
+        houses.forEach(function(h, idx) {
+            var card = document.createElement('div');
+            card.className = 'house-edit-card';
+            var fc = factionColors3[h.faction] || '#888';
+            card.style.borderLeftColor = fc;
+
+            var statRows = statLabels2.map(function(stat) {
+                var val = h.stats[stat] || 5;
+                var safeId = (reg + '_' + h.nom + '_' + stat).replace(/[^a-zA-Z0-9]/g, '_') + '_' + idx;
+                return '<div class="stat-edit-row">'
+                    + '<label>' + stat + '</label>'
+                    + '<input type="range" min="1" max="10" step="1" value="' + val + '" '
+                    + 'oninput="editData.houses[\'' + reg + '\'][' + idx + '].stats[\'' + stat + '\']=parseInt(this.value);document.getElementById(\'sv_' + safeId + '\').textContent=this.value">'
+                    + '<span class="stat-val" id="sv_' + safeId + '">' + val + '</span>'
+                    + '</div>';
+            }).join('');
+
+            var facOptions = factions2.map(function(f) {
+                return '<option value="' + f + '"' + (f === h.faction ? ' selected' : '') + '>' + f + '</option>';
+            }).join('');
+
+            card.innerHTML = '<input class="house-name-input" type="text" value="' + h.nom.replace(/"/g,'&quot;') + '" '
+                + 'oninput="editData.houses[\'' + reg + '\'][' + idx + '].nom=this.value" '
+                + 'placeholder="Nom de la maison">'
+                + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+                + '<span style="font-size:0.7rem;color:#aaa;">' + reg + '</span>'
+                + '<select onchange="updateHouseFaction(\'' + reg + '\',' + idx + ',this.value,this.closest(\'.house-edit-card\'))" style="border-color:' + fc + ';font-size:0.72rem;padding:3px 6px;">'
+                + facOptions + '</select>'
+                + '</div>'
+                + statRows
+                + '<button class="del-house-btn" onclick="deleteHouse(\'' + reg + '\',' + idx + ')">✕ Supprimer cette maison</button>';
+            grid.appendChild(card);
+        });
+    }
+}
+
+
+// ── ONGLET CLASSEMENT RÉGIONS ──
+function setRegTab(tab, btn) {
+    document.querySelectorAll('#view-regions .view-toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('regViewCompare').style.display = tab === 'compare' ? 'block' : 'none';
+    document.getElementById('regViewRanking').style.display = tab === 'ranking'  ? 'block' : 'none';
+    if (tab === 'ranking') renderRegionRanking();
+}
+
+function getRegionStatValue(reg, stat) {
+    // Returns a numeric score for sorting and a formatted string for display
+    var houses = editData.houses[reg] || housesData[reg] || [];
+    if (!houses.length) return { score: 0, display: '—' };
+
+    if (stat === '_cohesion') {
+        var info = regionDetails[reg] || {};
+        var pct  = info.cohesionPct || 0;
+        return { score: pct, display: pct + '% — ' + (info.statCohesion || '?'), color: cohesionColor2(pct) };
+    }
+
+    var sd = scalesData[stat];
+    if (!sd) return { score: 0, display: '—' };
+
+    if (sd.type === 'quantitative') {
+        var totMin = 0, totMax = 0;
+        houses.forEach(function(h) {
+            var v = getStatValue(stat, h.stats[stat] || 1);
+            totMin += v.min || 0;
+            totMax += v.max || 0;
+        });
+        return {
+            score:   totMin,
+            display: fmtNum(totMin, sd.unit) + ' – ' + fmtNum(totMax, sd.unit) + ' ' + sd.unit
+        };
+    }
+
+    if (sd.type === 'score') {
+        var totScore = 0;
+        houses.forEach(function(h) {
+            var v = getStatValue(stat, h.stats[stat] || 1);
+            totScore += v.weight || 0;
+        });
+        // Also compute average level for display
+        var avgLvl = 0;
+        houses.forEach(function(h) { avgLvl += (h.stats[stat] || 1); });
+        avgLvl = avgLvl / houses.length;
+        var desc = '';
+        if (sd.descriptions && sd.descriptions[Math.round(avgLvl)-1]) {
+            desc = sd.descriptions[Math.round(avgLvl)-1];
+        }
+        return {
+            score:   totScore,
+            display: Math.round(totScore) + ' pts' + (desc ? ' — ' + desc : '')
+        };
+    }
+
+    return { score: 0, display: '—' };
+}
+
+function renderRegionRanking() {
+    var list = document.getElementById('regionRankingList');
+    var s1   = document.getElementById('rankingStat1');
+    var s2   = document.getElementById('rankingStat2');
+    var s3   = document.getElementById('rankingStat3');
+    if (!list || !s1) return;
+
+    var stats = [s1.value, s2 ? s2.value : null, s3 ? s3.value : null];
+
+    var regions = Object.keys(housesData).filter(function(r) {
+        return (editData.houses[r] || housesData[r] || []).length > 0;
+    });
+
+    // Pour chaque colonne : trier les régions indépendamment
+    var columns = stats.map(function(stat, ci) {
+        if (!stat) return null;
+        var rows = regions.map(function(reg) {
+            var houses = editData.houses[reg] || housesData[reg] || [];
+            var sv = getRegionStatValue(reg, stat);
+            return { reg: reg, score: sv.score, display: sv.display, color: sv.color, houses: houses.length };
+        });
+        rows.sort(function(a, b) { return b.score - a.score; });
+        var maxScore = rows.length ? rows[0].score : 1;
+        return { stat: stat, rows: rows, maxScore: maxScore };
+    }).filter(Boolean);
+
+    if (!columns.length) { list.innerHTML = ''; return; }
+
+    // Get label for each selector
+    function getStatLabel(sel) {
+        if (!sel) return '';
+        var opt = sel.options[sel.selectedIndex];
+        return opt ? opt.text : '';
+    }
+    var labels = [getStatLabel(s1), getStatLabel(s2), getStatLabel(s3)];
+
+    // Build side-by-side columns layout
+    var nCols = columns.length;
+    var colW  = Math.floor(100 / nCols);
+
+    var html = '<div style="display:grid;grid-template-columns:repeat(' + nCols + ',1fr);gap:12px;">';
+
+    columns.forEach(function(col, ci) {
+        var label = labels[ci] || col.stat;
+        html += '<div>'
+            // Column header
+            + '<div style="background:var(--panel2);border:1px solid var(--border);border-bottom:2px solid var(--gold);'
+            + 'border-radius:7px 7px 0 0;padding:8px 14px;font-family:Cinzel;font-size:0.78rem;'
+            + 'color:var(--gold);font-weight:700;text-align:center;">' + label + '</div>'
+            // Rows
+            + '<div style="border:1px solid var(--border);border-top:none;border-radius:0 0 7px 7px;overflow:hidden;">';
+
+        col.rows.forEach(function(row, i) {
+            var color    = getRegionColor(row.reg);
+            var barPct   = col.maxScore > 0 ? Math.round((row.score / col.maxScore) * 100) : 0;
+            var posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            var valColor = row.color || color;
+            var bg       = i % 2 === 0 ? 'var(--white)' : 'var(--panel2)';
+
+            html += '<div style="display:grid;grid-template-columns:28px 1fr auto;align-items:center;'
+                + 'gap:8px;padding:8px 12px;background:' + bg + ';border-left:3px solid ' + color + ';'
+                + 'border-bottom:1px solid var(--border-light);">'
+                // Position
+                + '<span class="ranking-pos ' + posClass + '" style="font-size:0.85rem;">' + (i+1) + '</span>'
+                // Name + bar
+                + '<div>'
+                + '<div style="font-family:Cinzel;font-size:0.75rem;font-weight:700;color:var(--text);margin-bottom:3px;">' + row.reg + '</div>'
+                + '<div style="height:5px;background:var(--border-light);border-radius:3px;overflow:hidden;">'
+                + '<div style="height:100%;width:' + barPct + '%;background:' + color + ';border-radius:3px;"></div>'
+                + '</div>'
+                + '</div>'
+                // Value
+                + '<div style="font-weight:700;font-size:0.72rem;color:' + valColor + ';text-align:right;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;">'
+                + row.display + '</div>'
+                + '</div>';
+        });
+
+        html += '</div></div>';
+    });
+
+    html += '</div>';
+    list.innerHTML = html;
+}
+
+
+
+
+window.onload = function() { init(); initEdit(); };
+</script>
+
+
+<!-- VUE ÉCHELLES -->
+<div id="view-echelles" class="view-section">
+    <div class="edit-header">
+        <div>
+            <h2>⚖ Échelles de référence</h2>
+            <p>Définissez les fourchettes quantitatives et descriptions qualitatives par niveau (1 à 10).</p>
+        </div>
+        <button class="btn-export" onclick="exportHTML()">⬇ Exporter le fichier HTML</button>
+    </div>
+    <div id="scalesContent"></div>
+</div>
+
+<!-- VUE ÉDITION MJ -->
+<div id="view-edit" class="view-section">
+    <div class="edit-header">
+        <div>
+            <h2>✎ Mode Édition MJ</h2>
+            <p>Modifiez les valeurs ci-dessous puis exportez le fichier HTML mis à jour.</p>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span class="edit-saved-badge" id="savedBadge">✓ Fichier exporté</span>
+            <button class="btn-export" onclick="exportHTML()">⬇ Exporter le fichier HTML</button>
+        </div>
+    </div>
+
+    <div class="edit-section-title">🗺 Cohésion Régionale</div>
+    <div class="cohesion-edit-grid" id="cohesionEditGrid"></div>
+
+    <div class="edit-section-title">🛡 Caractéristiques des Maisons</div>
+    <div class="house-edit-filter">
+        <span class="filter-label">Filtrer par région :</span>
+        <select id="editRegionFilter" onchange="renderHouseEdit()">
+            <option value="all">Toutes les régions</option>
+        </select>
+    </div>
+    <div class="house-edit-grid" id="houseEditGrid"></div>
+</div>
+
+
+<!-- MODAL AJOUT MAISON -->
+<div class="modal-overlay" id="addHouseModal">
+    <div class="modal-box">
+        <h3>+ Ajouter une maison</h3>
+        <input type="hidden" id="modalRegion">
+        <div class="modal-field">
+            <label>Nom de la maison *</label>
+            <input type="text" id="modalNom" placeholder="Ex: Stark">
+        </div>
+        <div class="modal-field">
+            <label>Description</label>
+            <textarea id="modalDesc" placeholder="Description courte..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="modal-field">
+                <label>Faction</label>
+                <select id="modalFaction">
+                    <option value="Vert">Faction Verte</option>
+                    <option value="Rouge">Faction Rouge</option>
+                    <option value="Noire">Faction Noire</option>
+                    <option value="Neutres" selected>Neutres</option>
+                </select>
+            </div>
+            <div class="modal-field">
+                <label>Couleur (radar)</label>
+                <input type="color" id="modalCouleur" value="#888888" style="height:36px;padding:2px;">
+            </div>
+        </div>
+        <div class="modal-field">
+            <label>Caractéristiques (1 à 10)</label>
+            <div class="modal-stat-grid">
+                <div class="modal-stat-row"><label>Terres</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Commerce</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Population</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Influence</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Diplomatie</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Cohésion</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Défensif</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Mil. Terrestre</label><input type="range" min="1" max="10" value="5" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">5</span></div>
+                <div class="modal-stat-row"><label>Mil. Naval</label><input type="range" min="1" max="10" value="1" oninput="this.nextElementSibling.textContent=this.value"><span class="sv">1</span></div>
+            </div>
+        </div>
+        <div class="modal-btns">
+            <button class="modal-btn-cancel" onclick="closeAddHouseModal()">Annuler</button>
+            <button class="modal-btn-ok" onclick="confirmAddHouse()">Ajouter la maison</button>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
